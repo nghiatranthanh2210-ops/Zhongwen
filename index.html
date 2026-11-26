@@ -108,7 +108,7 @@ select{font-size:16px;max-width:100%}
 <div class="cult" id="cult"></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="tabs" role="tablist">
-  <button role="tab" data-m="tower" aria-selected="true">Tháp tu luyện</button>
+  <button role="tab" data-m="tower" aria-selected="true">Vượt màn</button>
   <button role="tab" data-m="cards" aria-selected="false">Thẻ ghi nhớ</button>
   <button role="tab" data-m="paper" aria-selected="false">Viết ra giấy</button>
   <button role="tab" data-m="learn" aria-selected="false">Học</button>
@@ -150,18 +150,17 @@ const st=$('stage');let mode='cards',keyH=null;
 document.addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key==='Enter'||e.key===' '))return;if(keyH&&!(e.target.tagName==='INPUT'&&!['Enter'].includes(e.key)))keyH(e)});
 function empty(){st.innerHTML=`<p class="q">Chưa có từ nào.</p><p class="lbl">${starOnly?'Bạn chưa gắn sao từ nào trong nhóm này. Bấm ☆ trên thẻ để gắn sao.':'Nhóm này trống.'}</p>`;keyH=null}
 
-/* ---------- TU LUYỆN: điểm, cảnh giới, chuỗi ngày ---------- */
-const REALMS=[['Luyện Khí',0],['Trúc Cơ',300],['Kết Đan',900],['Nguyên Anh',2000],['Hóa Thần',4000],['Luyện Hư',7000],['Hợp Thể',11000],['Đại Thừa',16000],['Độ Kiếp',23000],['Tiên Nhân',32000]];
-const STAGES=['Sơ kỳ','Trung kỳ','Hậu kỳ'];
+/* ---------- LEVEL: điểm, level, chuỗi ngày ---------- */
 let XP=store.get('xp',0),STK=store.get('streak',{d:null,n:0});
 const dayN=()=>{const d=new Date();return Math.floor((d-d.getTimezoneOffset()*6e4)/864e5)};
-function realmOf(x){let i=0;while(i<REALMS.length-1&&x>=REALMS[i+1][1])i++;const lo=REALMS[i][1],hi=i<REALMS.length-1?REALMS[i+1][1]:lo+15000;const f=(x-lo)/(hi-lo);return{i,name:REALMS[i][0],stage:STAGES[Math.min(2,Math.floor(f*3))],f,lo,hi}}
+/* Level L cần 100×L điểm để lên L+1 */
+function realmOf(x){const L=Math.floor((1+Math.sqrt(1+8*x/100))/2),lo=50*L*(L-1),hi=50*(L+1)*L;return{i:L,name:'Level '+L,f:(x-lo)/(hi-lo),lo,hi}}
 function cult(){const r=realmOf(XP),today=dayN(),alive=STK.d===today||STK.d===today-1;
-  $('cult').innerHTML=`<span class="realm">${r.name}<small>${r.stage}</small></span><div class="xpbar" title="${XP} điểm"><i style="width:${(r.f*100).toFixed(1)}%"></i></div><span class="xpn">${XP} / ${r.hi} điểm</span><span class="fire" title="Chuỗi ngày học liên tục">🔥 ${alive?STK.n:0} ngày</span>`}
+  $('cult').innerHTML=`<span class="realm">${r.name}</span><div class="xpbar" title="${XP} điểm"><i style="width:${(r.f*100).toFixed(1)}%"></i></div><span class="xpn">${XP} / ${r.hi} điểm</span><span class="fire" title="Chuỗi ngày học liên tục">🔥 ${alive?STK.n:0} ngày</span>`}
 let toastT=0;function toast(m){$('toast').textContent=m;$('toast').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toast').classList.remove('on'),2600)}
 function gain(n){if(!n)return;const before=realmOf(XP);XP+=n;store.set('xp',XP);
   const today=dayN();if(STK.d!==today){STK={d:today,n:STK.d===today-1?STK.n+1:1};store.set('streak',STK);if(STK.n>1)toast(`🔥 Chuỗi ${STK.n} ngày liên tục!`)}
-  const after=realmOf(XP);if(after.i>before.i)toast(`⚡ Đột phá! Bước vào ${after.name}`);else if(after.stage!==before.stage)toast(`Lên ${after.name} · ${after.stage}`);cult()}
+  const after=realmOf(XP);if(after.i>before.i)toast(`🎉 Lên ${after.name}!`);cult()}
 
 /* câu nghe: nghe phát âm, chọn nghĩa hoặc chữ Hán */
 function listenQ(w,head,onAns,onNext,toHan){
@@ -176,25 +175,25 @@ function listenQ(w,head,onAns,onNext,toHan){
   st.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b));
   keyH=e=>{if(!done&&/^[1-4]$/.test(e.key))pick(st.querySelectorAll('.opt')[e.key-1]);else if(!done&&e.key===' '){e.preventDefault();say(w.h)}else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
 
-/* ---------- THÁP TU LUYỆN ---------- */
+/* ---------- VƯỢT MÀN ---------- */
 const FLOORS=(()=>{const f=[];groups.forEach(g=>{const ws=ALL.filter(w=>w.g===g);const n=Math.max(1,Math.round(ws.length/10));for(let k=0;k<n;k++){const part=ws.slice(Math.floor(k*ws.length/n),Math.floor((k+1)*ws.length/n));f.push({g,k:k+1,n,ws:part})}});return f})();
 let TS=store.get('tower',{});
 function tower(){const top=FLOORS.findIndex((f,i)=>!(TS[i]>0));
-  st.innerHTML=`<div class="q">Tháp tu luyện · ${FLOORS.length} tầng</div><p class="lbl">Mỗi tầng 10 câu (chọn nghĩa, nghe, gõ pinyin…). Đúng từ 80% trở lên thì qua tầng và mở tầng tiếp theo. 100% được 3 sao.</p>
+  st.innerHTML=`<div class="q">Vượt màn · ${FLOORS.length} màn</div><p class="lbl">Mỗi màn 10 câu (chọn nghĩa, nghe, gõ pinyin…). Đúng từ 80% trở lên thì qua màn và mở màn tiếp theo. 100% được 3 sao.</p>
   <div class="tower">${FLOORS.map((f,i)=>({f,i})).reverse().map(({f,i})=>{const s=TS[i]||0,lock=i>0&&!(TS[i-1]>0);
     return `<button class="floor ${lock?'lock':''} ${i===top?'cur':''}" data-i="${i}" ${lock?'aria-disabled="true"':''}><span class="n">${i+1}</span><span><span class="t">${esc(f.g)}${f.n>1?' '+f.k+'/'+f.n:''}</span><br><span class="s">${f.ws.slice(0,6).map(w=>esc(w.h)).join(' · ')}${f.ws.length>6?' …':''}</span></span><span class="st">${lock?'🔒':'★'.repeat(s)+'☆'.repeat(3-s)}</span></button>`}).join('')}</div>`;
   keyH=null;st.querySelectorAll('.floor').forEach(b=>b.onclick=()=>{if(!b.classList.contains('lock'))climb(+b.dataset.i)});
   const c=st.querySelector('.floor.cur');if(c)setTimeout(()=>c.scrollIntoView({block:'center',behavior:'smooth'}),50)}
 function climb(fi){const f=FLOORS[fi],pool=shuf(f.ws),qs=[];for(let k=0;k<10;k++)qs.push(pool[k%pool.length]);
   const R={i:0,ok:0,wrong:[]},kinds=['mcq','listen','rev','type','tf','listenH','mcq','type','listen','rev'];
-  const next=()=>{if(R.i>=qs.length)return done();const w=qs[R.i],head=`<div class="prog"><i style="width:${R.i*10}%"></i></div><div class="meta"><span>Tầng ${fi+1} · câu ${R.i+1}/10</span><span>Đúng ${R.ok}</span></div>`;
+  const next=()=>{if(R.i>=qs.length)return done();const w=qs[R.i],head=`<div class="prog"><i style="width:${R.i*10}%"></i></div><div class="meta"><span>Màn ${fi+1} · câu ${R.i+1}/10</span><span>Đúng ${R.ok}</span></div>`;
     const on=ok=>{if(ok)R.ok++;else if(!R.wrong.includes(w))R.wrong.push(w)},nx=()=>{R.i++;next()},k=kinds[R.i];
     if(k==='mcq')mcq(w,head,on,nx);else if(k==='rev')mcq(w,head,on,nx,true);else if(k==='type')typeQ(w,'p',head,on,nx);else if(k==='tf')tf(w,head,on,nx);else listenQ(w,head,on,nx,k==='listenH')};
   const done=()=>{const pct=R.ok*10,s=pct===100?3:pct>=90?2:pct>=80?1:0,first=!(TS[fi]>0)&&s>0;
     if(s>(TS[fi]||0)){TS[fi]=s;store.set('tower',TS)}gain(first?100:s?20:0);
-    st.innerHTML=`<div class="lbl">Tầng ${fi+1}: ${esc(f.g)}</div><div class="big" style="color:${s?'var(--ok)':'var(--red)'}">${pct}%</div><p style="font-size:24px;color:#e0a800;margin:4px 0">${'★'.repeat(s)}${'☆'.repeat(3-s)}</p>
-    <p>${s?(first?'Qua tầng! +100 điểm tu vi. Tầng tiếp theo đã mở.':'Đã qua tầng.'):'Chưa đủ 80%. Ôn lại rồi thử tiếp nhé.'}</p>
-    <div class="bar">${s&&fi+1<FLOORS.length?`<button class="btn pri" id="up">Lên tầng ${fi+2} →</button>`:''}<button class="btn ${s?'':'pri'}" id="re">Thử lại tầng này</button><button class="btn" id="bk">Về tháp</button></div>
+    st.innerHTML=`<div class="lbl">Màn ${fi+1}: ${esc(f.g)}</div><div class="big" style="color:${s?'var(--ok)':'var(--red)'}">${pct}%</div><p style="font-size:24px;color:#e0a800;margin:4px 0">${'★'.repeat(s)}${'☆'.repeat(3-s)}</p>
+    <p>${s?(first?'Qua màn! +100 điểm. Màn tiếp theo đã mở.':'Đã qua màn.'):'Chưa đủ 80%. Ôn lại rồi thử tiếp nhé.'}</p>
+    <div class="bar">${s&&fi+1<FLOORS.length?`<button class="btn pri" id="up">Màn ${fi+2} →</button>`:''}<button class="btn ${s?'':'pri'}" id="re">Chơi lại màn này</button><button class="btn" id="bk">Danh sách màn</button></div>
     ${R.wrong.length?`<ul class="res">${R.wrong.map(w=>`<li><span class="hz">${esc(w.h)}</span><span><span style="color:var(--red)">${esc(w.p)}</span> · ${esc(w.v)}</span></li>`).join('')}</ul>`:''}`;
     keyH=null;if($('up'))$('up').onclick=()=>climb(fi+1);$('re').onclick=()=>climb(fi);$('bk').onclick=tower};
   next()}
@@ -350,7 +349,7 @@ function startMatch(w){const pick=shuf(w).slice(0,6),tiles=shuf(pick.flatMap(x=>
 
 /* ---------- điều hướng ---------- */
 const MODES={tower,paper,cards,learn,write,test,match,exam};
-const NOTES={paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Leo tháp từ tầng 1. Mỗi câu đúng cộng điểm tu vi; qua tầng lần đầu +100.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+const NOTES={paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
 function go(m,re){mode=m;clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
   $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
