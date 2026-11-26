@@ -80,6 +80,17 @@ select{font-size:16px;max-width:100%}
 .floor .t{font-weight:500}.floor .s{font-size:13px;color:var(--mut)}
 .floor.lock{opacity:.45;cursor:not-allowed}.floor.cur{border-color:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 18%,transparent)}
 .floor .st{color:#e0a800;letter-spacing:2px;white-space:nowrap}
+.plist{list-style:none;padding:0;margin:14px 0 0;counter-reset:n}
+.plist li{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.plist .no{color:var(--mut);font-size:14px;text-align:right}
+.plist .ans{font-family:"Noto Serif SC",serif;font-size:28px;line-height:1.2;cursor:pointer;min-height:44px;display:flex;align-items:center;border-radius:8px}
+.plist .ans.hid{color:transparent;background:repeating-linear-gradient(45deg,var(--line) 0 6px,transparent 6px 12px)}
+.plist .ans.hid.v{font-family:inherit}
+.plist .ans.hid *{color:transparent!important}
+.plist .cue b{display:block}.plist .cue span{color:var(--red);font-size:15px}
+.plist .mk{min-height:40px;min-width:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;font-size:18px}
+.plist .mk.on{border-color:var(--ok);background:var(--okbg)}
+@media(max-width:600px){.plist li{grid-template-columns:26px minmax(0,1fr) auto;}.plist .ans{grid-column:2}}
 .spk{display:flex;justify-content:center;margin:6px 0 16px}.spk button{width:96px;height:96px;border-radius:50%;font-size:40px;border:2px solid var(--red);background:var(--bg);cursor:pointer}
 @media(max-width:600px){.opts{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:84px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -99,6 +110,7 @@ select{font-size:16px;max-width:100%}
 <div class="tabs" role="tablist">
   <button role="tab" data-m="tower" aria-selected="true">Tháp tu luyện</button>
   <button role="tab" data-m="cards" aria-selected="false">Thẻ ghi nhớ</button>
+  <button role="tab" data-m="paper" aria-selected="false">Viết ra giấy</button>
   <button role="tab" data-m="learn" aria-selected="false">Học</button>
   <button role="tab" data-m="write" aria-selected="false">Gõ đáp án</button>
   <button role="tab" data-m="test" aria-selected="false">Kiểm tra</button>
@@ -204,6 +216,25 @@ function exam(){clearInterval(examT);const w=words();if(w.length<8)return empty(
       <div class="bar"><button class="btn pri" id="ag">Thi lại</button></div>${E.wrong.length?`<ul class="res">${E.wrong.map(w=>`<li><span class="hz">${esc(w.h)}</span><span><span style="color:var(--red)">${esc(w.p)}</span> · ${esc(w.v)}</span></li>`).join('')}</ul>`:''}`;
       keyH=null;$('ag').onclick=exam};
     next()}}
+
+/* ---------- VIẾT RA GIẤY: danh sách từ ngẫu nhiên ---------- */
+let P={n:store.get('paper-n',10),dir:store.get('paper-dir','h'),py:store.get('paper-py',true),list:null,src:null};
+function paper(re){const w=words();if(!w.length)return empty();if(re||!P.list||P.src!==w){P.src=w;P.list=shuf(w).slice(0,Math.min(P.n,w.length))}drawPaper()}
+function drawPaper(){const H=P.dir==='h';
+  st.innerHTML=`<div class="q">Viết ra giấy</div><p class="lbl">${H?'Nhìn nghĩa'+(P.py?' và pinyin':'')+', viết chữ Hán vào giấy.':'Nhìn chữ Hán, viết pinyin và nghĩa vào giấy.'} Viết xong bấm vào ô gạch chéo để xem đáp án, đúng thì tick ✓ (+5 điểm).</p>
+  <div class="bar"><select id="pn" aria-label="Số từ">${[5,10,15,20,30,50].map(x=>`<option ${x===P.n?'selected':''}>${x}</option>`).join('')}</select>
+  <button class="btn" id="pd">Viết: ${H?'chữ Hán':'pinyin + nghĩa'}</button>${H?`<button class="btn" id="pp">Gợi ý pinyin: ${P.py?'bật':'tắt'}</button>`:''}
+  <button class="btn" id="pa">Hiện tất cả</button><button class="btn pri" id="pr">🎲 Danh sách mới</button></div>
+  <ol class="plist">${P.list.map((w,k)=>`<li><span class="no">${k+1}.</span>${H?`<span class="cue"><b>${esc(w.v)}</b>${P.py?`<span>${esc(w.p)}</span>`:''}</span><span class="ans hid" data-k="${k}" title="Bấm để xem đáp án">${esc(w.h)}</span>`:`<span class="ans" style="cursor:default">${esc(w.h)}</span><span class="cue ans hid v" data-k="${k}" title="Bấm để xem đáp án" style="display:block;font-size:16px"><b>${esc(w.v)}</b><span>${esc(w.p)}</span></span>`}<button class="mk" data-k="${k}" aria-label="Viết đúng">✓</button></li>`).join('')}</ol>
+  <p class="small" style="margin-top:12px" id="psum"></p>`;
+  const sum=()=>{const n=st.querySelectorAll('.mk.on').length;$('psum').textContent=n?`Viết đúng ${n}/${P.list.length} từ.`:''};
+  st.querySelectorAll('.ans.hid').forEach(a=>a.onclick=()=>{if(a.classList.contains('hid')){a.classList.remove('hid');say(P.list[+a.dataset.k].h)}});
+  st.querySelectorAll('.mk').forEach(b=>b.onclick=()=>{const on=!b.classList.contains('on');b.classList.toggle('on',on);if(on){gain(5);const a=st.querySelector(`.ans.hid[data-k="${b.dataset.k}"]`);if(a)a.classList.remove('hid')}sum()});
+  $('pn').onchange=()=>{P.n=+$('pn').value;store.set('paper-n',P.n);paper(true)};
+  $('pd').onclick=()=>{P.dir=H?'v':'h';store.set('paper-dir',P.dir);drawPaper()};
+  if($('pp'))$('pp').onclick=()=>{P.py=!P.py;store.set('paper-py',P.py);drawPaper()};
+  $('pa').onclick=()=>st.querySelectorAll('.ans.hid').forEach(a=>a.classList.remove('hid'));
+  $('pr').onclick=()=>paper(true);keyH=null}
 
 /* ---------- THẺ GHI NHỚ ---------- */
 let C={list:[],i:0,front:'h'};
@@ -318,8 +349,8 @@ function startMatch(w){const pick=shuf(w).slice(0,6),tiles=shuf(pick.flatMap(x=>
     else{M.pen+=1;[a,b].forEach(x=>{x.classList.add('no');setTimeout(()=>x.classList.remove('no'),400)})}})}
 
 /* ---------- điều hướng ---------- */
-const MODES={tower,cards,learn,write,test,match,exam};
-const NOTES={tower:'Leo tháp từ tầng 1. Mỗi câu đúng cộng điểm tu vi; qua tầng lần đầu +100.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+const MODES={tower,paper,cards,learn,write,test,match,exam};
+const NOTES={paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Leo tháp từ tầng 1. Mỗi câu đúng cộng điểm tu vi; qua tầng lần đầu +100.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
 function go(m,re){mode=m;clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
   $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
