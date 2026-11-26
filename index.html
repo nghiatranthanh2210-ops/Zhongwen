@@ -222,7 +222,7 @@ let P={n:store.get('paper-n',10),dir:store.get('paper-dir','h'),py:store.get('pa
 function paper(re){const w=words();if(!w.length)return empty();if(re||!P.list||P.src!==w){P.src=w;P.list=shuf(w).slice(0,Math.min(P.n,w.length))}drawPaper()}
 function drawPaper(){const H=P.dir==='h';
   st.innerHTML=`<div class="q">Viết ra giấy</div><p class="lbl">${H?'Nhìn nghĩa'+(P.py?' và pinyin':'')+', viết chữ Hán vào giấy.':'Nhìn chữ Hán, viết pinyin và nghĩa vào giấy.'} Viết xong bấm vào ô gạch chéo để xem đáp án, đúng thì tick ✓ (+5 điểm).</p>
-  <div class="bar"><select id="pn" aria-label="Số từ">${[5,10,15,20,30,50].map(x=>`<option ${x===P.n?'selected':''}>${x}</option>`).join('')}</select>
+  <div class="bar"><select id="pn" aria-label="Số từ">${[5,10,15,20,30,50].map(x=>`<option ${x===P.n?'selected':''}>${x}</option>`).join('')}<option value="9999" ${P.n>=9999?'selected':''}>Tất cả</option></select>
   <button class="btn" id="pd">Viết: ${H?'chữ Hán':'pinyin + nghĩa'}</button>${H?`<button class="btn" id="pp">Gợi ý pinyin: ${P.py?'bật':'tắt'}</button>`:''}
   <button class="btn" id="pa">Hiện tất cả</button><button class="btn pri" id="pr">🎲 Danh sách mới</button></div>
   <ol class="plist">${P.list.map((w,k)=>`<li><span class="no">${k+1}.</span>${H?`<span class="cue"><b>${esc(w.v)}</b>${P.py?`<span>${esc(w.p)}</span>`:''}</span><span class="ans hid" data-k="${k}" title="Bấm để xem đáp án">${esc(w.h)}</span>`:`<span class="ans" style="cursor:default">${esc(w.h)}</span><span class="cue ans hid v" data-k="${k}" title="Bấm để xem đáp án" style="display:block;font-size:16px"><b>${esc(w.v)}</b><span>${esc(w.p)}</span></span>`}<button class="mk" data-k="${k}" aria-label="Viết đúng">✓</button></li>`).join('')}</ol>
