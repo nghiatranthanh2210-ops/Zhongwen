@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Học từ tiếng Trung</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap">
+<style>
+/* VOICE: focused study deck, friendly but calm
+   IDEA: a stack of index cards on a desk, the card is the hero
+   PICTURE: the big flip card / question card at the top of each mode
+   COLOUR and TYPE: white ground, ink #1b1b1f, vermilion #d42a20 accent, jade #0f7a5c correct; Noto Serif SC hanzi, Be Vietnam Pro UI
+   LAYOUT: title + set filter, mode tabs, one stage card, controls under it */
+:root{color-scheme:light dark;--bg:light-dark(#f6f5f3,#121214);--card:light-dark(#ffffff,#1d1d21);--ink:light-dark(#1b1b1f,#ecebe7);--mut:light-dark(#6b6b72,#9d9ca3);--line:light-dark(#e4e2df,#2e2e33);--red:light-dark(#d42a20,#ff5a4d);--ok:light-dark(#0f7a5c,#3fcf9f);--okbg:light-dark(#e3f4ec,#123a2d);--nobg:light-dark(#fbe6e4,#3d1715)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Be Vietnam Pro",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:820px;margin:0 auto;padding:clamp(16px,3vw,32px) max(4vw,14px) 48px}
+header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+h1{font-size:clamp(24px,4vw,32px);line-height:1.05;margin:0}
+h1 span{font-family:"Noto Serif SC",serif;color:var(--red);margin-right:6px}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;overflow-x:auto;padding-bottom:2px}
+button,select,input{font:inherit;color:var(--ink)}
+.tabs button,.btn,select{font-size:15px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;flex:none}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff;font-weight:500}
+.btn.on{border-color:var(--red);color:var(--red)}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+select{font-size:16px;max-width:100%}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stage{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(16px,3vw,28px);box-shadow:0 8px 24px -18px rgba(0,0,0,.35)}
+.hz{font-family:"Noto Serif SC",serif;font-weight:500}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:14px}.prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-bottom:8px}
+/* flashcard */
+.flip{perspective:1400px;cursor:pointer;height:clamp(240px,42vw,340px)}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.flip.back .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;border:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
+.face.b{transform:rotateY(180deg)}
+.face .hz{font-size:clamp(56px,13vw,104px);line-height:1.1}
+.face .py{font-size:clamp(20px,3.5vw,26px);color:var(--red)}
+.face .vi{font-size:clamp(20px,3.6vw,28px);font-weight:700;margin-top:4px}
+.star{position:absolute;top:10px;right:12px;background:none;border:0;font-size:24px;cursor:pointer;color:var(--mut);min-height:44px;min-width:44px;z-index:2}
+.star.on{color:#e0a800}
+.q{font-size:clamp(20px,3.6vw,28px);font-weight:700;margin:6px 0 14px}
+.q .hz{font-size:clamp(48px,11vw,84px);font-weight:500;display:block;line-height:1.15}
+.lbl{font-size:14px;color:var(--mut)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{min-height:58px;padding:10px 14px;text-align:start;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;font-size:16px}
+.opt .hz{font-size:26px}
+.opt kbd{font-size:12px;color:var(--mut);margin-right:8px;font-family:inherit}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}.opt.no{border-color:var(--red);background:var(--nobg)}
+.typ{display:flex;gap:8px;flex-wrap:wrap}
+.typ input{flex:1 1 220px;font-size:18px;min-height:50px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
+.fb{margin-top:12px;padding:12px 14px;border-radius:12px;display:none}
+.fb.ok{display:block;background:var(--okbg)}.fb.no{display:block;background:var(--nobg)}
+.fb b{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{min-height:96px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;padding:8px;font-size:15px;display:flex;align-items:center;justify-content:center;text-align:center;transition:opacity .25s,transform .25s}
+.tile .hz{font-size:32px}
+.tile.sel{border-color:var(--red)}.tile.no{background:var(--nobg);border-color:var(--red)}
+.tile.gone{opacity:0;transform:scale(.9);pointer-events:none}
+.big{font-size:clamp(40px,8vw,64px);font-weight:700;line-height:1.05}
+.res{list-style:none;padding:0;margin:14px 0 0}
+.res li{padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:baseline}
+.res .hz{font-size:24px}
+.small{font-size:13px;color:var(--mut)}
+.hide{display:none!important}
+.note{font-size:13px;color:var(--mut);margin-top:16px}
+@media(max-width:600px){.opts{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:84px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1><span>学</span>Học từ tiếng Trung</h1>
+  <div class="bar">
+    <select id="set" aria-label="Chọn nhóm từ"></select>
+    <button class="btn" id="starOnly" aria-pressed="false">★ Chỉ từ gắn sao</button>
+  </div>
+</header>
+<div class="tabs" role="tablist">
+  <button role="tab" data-m="cards" aria-selected="true">Thẻ ghi nhớ</button>
+  <button role="tab" data-m="learn" aria-selected="false">Học</button>
+  <button role="tab" data-m="write" aria-selected="false">Gõ đáp án</button>
+  <button role="tab" data-m="test" aria-selected="false">Kiểm tra</button>
+  <button role="tab" data-m="match" aria-selected="false">Ghép thẻ</button>
+</div>
+<section class="stage" id="stage"></section>
+<p class="note" id="note"></p>
+</div>
+<script>
+{
+const RAW=[["你","nǐ","bạn","Trang 1 – Nhóm 1"],["您","nín","ông/bà (lịch sự)","Trang 1 – Nhóm 1"],["我","wǒ","tôi","Trang 1 – Nhóm 1"],["他","tā","anh ấy","Trang 1 – Nhóm 1"],["们","men","(số nhiều)","Trang 1 – Nhóm 1"],["老师","lǎoshī","giáo viên","Trang 1 – Nhóm 1"],["学生","xuésheng","học sinh","Trang 1 – Nhóm 1"],["学习","xuéxí","học","Trang 1 – Nhóm 1"],["好","hǎo","tốt","Trang 1 – Nhóm 1"],["你好","nǐ hǎo","xin chào","Trang 1 – Nhóm 1"],["吗","ma","(từ để hỏi)","Trang 1 – Nhóm 1"],["不","bù","không","Trang 1 – Nhóm 1"],["很","hěn","rất","Trang 1 – Nhóm 1"],["是","shì","là","Trang 1 – Nhóm 1"],["留学生","liúxuéshēng","du học sinh","Trang 1 – Nhóm 2"],["叫","jiào","gọi, tên là","Trang 1 – Nhóm 2"],["名字","míngzi","tên","Trang 1 – Nhóm 2"],["什么","shénme","cái gì","Trang 1 – Nhóm 2"],["谢谢","xièxie","cảm ơn","Trang 1 – Nhóm 2"],["不客气","bú kèqi","đừng khách sáo","Trang 1 – Nhóm 2"],["大卫","Dàwèi","David","Trang 1 – Nhóm 2"],["李军","Lǐ Jūn","Lý Quân (tên)","Trang 1 – Nhóm 2"],["王","Wáng","họ Vương","Trang 1 – Nhóm 2"],["零","líng","số 0","Trang 1 – Nhóm 2"],["一","yī","một","Trang 1 – Nhóm 2"],["二","èr","hai","Trang 1 – Nhóm 2"],["三","sān","ba","Trang 1 – Nhóm 2"],["四","sì","bốn","Trang 1 – Nhóm 2"],["五","wǔ","năm","Trang 1 – Nhóm 2"],["六","liù","sáu","Trang 1 – Nhóm 2"],["七","qī","bảy","Trang 1 – Nhóm 2"],["八","bā","tám","Trang 1 – Nhóm 2"],["九","jiǔ","chín","Trang 1 – Nhóm 2"],["十","shí","mười","Trang 1 – Nhóm 2"],["哪","nǎ","nào","Trang 1 – Nhóm 2"],["国","guó","nước","Trang 1 – Nhóm 2"],["人","rén","người","Trang 1 – Nhóm 2"],["越南","Yuènán","Việt Nam","Trang 1 – Nhóm 2"],["中国","Zhōngguó","Trung Quốc","Trang 1 – Nhóm 2"],["美国","Měiguó","Mỹ","Trang 1 – Nhóm 2"],["美","měi","đẹp","Trang 1 – Nhóm 2"],["帅","shuài","đẹp trai","Trang 1 – Nhóm 2"],["加拿大","Jiānádà","Canada","Trang 1 – Nhóm 2"],["英国","Yīngguó","Anh","Trang 1 – Nhóm 2"],["日本","Rìběn","Nhật Bản","Trang 1 – Nhóm 2"],["呢","ne","thì sao","Trang 1 – Nhóm 2"],["也是","yě shì","cũng là","Trang 1 – Nhóm 2"],["忙","máng","bận","Trang 1 – Nhóm 2"],["来了","lái le","đến rồi","Trang 1 – Nhóm 2"],["介绍","jièshào","giới thiệu","Trang 1 – Nhóm 2"],["一下儿","yíxiàr","một chút","Trang 1 – Nhóm 2"],["贵姓","guìxìng","quý danh","Trang 1 – Nhóm 2"],["认识","rènshi","quen biết","Trang 1 – Nhóm 2"],["高兴","gāoxìng","vui","Trang 1 – Nhóm 2"],["的","de","của","Trang 1 – Nhóm 3"],["朋友","péngyou","bạn bè","Trang 1 – Nhóm 3"],["同学","tóngxué","bạn học","Trang 1 – Nhóm 3"],["那","nà","kia","Trang 1 – Nhóm 3"],["这","zhè","này","Trang 1 – Nhóm 3"],["谁","shéi","ai","Trang 1 – Nhóm 3"],["书","shū","sách","Trang 1 – Nhóm 3"],["汉语","Hànyǔ","tiếng Hán","Trang 1 – Nhóm 3"],["中文","Zhōngwén","tiếng Trung","Trang 1 – Nhóm 3"],["听","tīng","nghe","Trang 1 – Nhóm 4"],["说","shuō","nói","Trang 1 – Nhóm 4"],["读","dú","đọc","Trang 1 – Nhóm 4"],["写","xiě","viết","Trang 1 – Nhóm 4"],["看","kàn","xem","Trang 1 – Nhóm 4"],["喜欢","xǐhuan","thích","Trang 1 – Nhóm 4"],["词","cí","từ","Trang 1 – Nhóm 4"],["爱好","àihào","sở thích","Trang 1 – Nhóm 4"],["电影","diànyǐng","phim","Trang 1 – Nhóm 4"],["音乐","yīnyuè","âm nhạc","Trang 1 – Nhóm 4"],["词典","cídiǎn","từ điển","Trang 1 – Nhóm 4"],["课本","kèběn","sách giáo khoa","Trang 1 – Nhóm 4"],["同屋","tóngwū","bạn cùng phòng","Trang 1 – Nhóm 4"],["教室","jiàoshì","phòng học","Trang 1 – Nhóm 4"],["杂志","zázhì","tạp chí","Trang 1 – Nhóm 4"],["有","yǒu","có","Trang 1 – Nhóm 4"],["没有","méi yǒu","không có","Trang 1 – Nhóm 4"],["几","jǐ","mấy","Trang 1 – Nhóm 4"],["两","liǎng","hai","Trang 1 – Nhóm 4"],["来自","láizì","đến từ","Trang 1 – Nhóm 4"],["香港","Xiānggǎng","Hồng Kông","Trang 1 – Nhóm 4"],["家","jiā","nhà","Trang 1 – Nhóm 4"],["哪里","nǎlǐ","ở đâu","Trang 1 – Nhóm 4"],["请问","qǐngwèn","xin hỏi","Trang 1 – Nhóm 5"],["在","zài","ở","Trang 1 – Nhóm 5"],["哪儿","nǎr","đâu","Trang 1 – Nhóm 5"],["学校","xuéxiào","trường học","Trang 1 – Nhóm 5"],["这儿","zhèr","đây","Trang 1 – Nhóm 5"],["那儿","nàr","đó","Trang 1 – Nhóm 5"],["里","lǐ","trong","Trang 1 – Nhóm 5"],["东边","dōngbian","phía đông","Trang 1 – Nhóm 5"],["西边","xībian","phía tây","Trang 1 – Nhóm 5"],["南边","nánbian","phía nam","Trang 1 – Nhóm 5"],["北边","běibian","phía bắc","Trang 1 – Nhóm 5"],["前边","qiánbian","phía trước","Trang 1 – Nhóm 5"],["后边","hòubian","phía sau","Trang 1 – Nhóm 5"],["左边","zuǒbian","bên trái","Trang 1 – Nhóm 5"],["右边","yòubian","bên phải","Trang 1 – Nhóm 5"],["上边","shàngbian","bên trên","Trang 1 – Nhóm 5"],["下边","xiàbian","bên dưới","Trang 1 – Nhóm 5"],["里边","lǐbian","bên trong","Trang 1 – Nhóm 5"],["外边","wàibian","bên ngoài","Trang 1 – Nhóm 5"],["旁边","pángbiān","bên cạnh","Trang 1 – Nhóm 5"],["中间","zhōngjiān","ở giữa","Trang 1 – Nhóm 5"],["对面","duìmiàn","đối diện","Trang 1 – Nhóm 5"],["对不起","duìbuqǐ","xin lỗi","Trang 1 – Nhóm 5"],["没关系","méi guānxi","không sao","Trang 1 – Nhóm 5"],["图书馆","túshūguǎn","thư viện","Trang 1 – Nhóm 5"],["这个","zhège","cái này","Trang 1 – Nhóm 5"],["大","dà","to, lớn","Trang 1 – Nhóm 5"],["宿舍","sùshè","ký túc xá","Trang 1 – Nhóm 5"],["教学楼","jiàoxuélóu","tòa giảng đường","Trang 1 – Nhóm 5"],["楼","lóu","tòa nhà","Trang 1 – Nhóm 5"],["知道","zhīdào","biết","Trang 1 – Nhóm 5"],["会","huì","biết, sẽ","Trang 1 – Nhóm 5"],["走","zǒu","đi","Trang 1 – Nhóm 5"],["系","xì","khoa","Trang 2 – Nhóm 1"],["研究生","yánjiūshēng","nghiên cứu sinh","Trang 2 – Nhóm 1"],["现代","xiàndài","hiện đại","Trang 2 – Nhóm 1"],["有空儿","yǒu kòngr","rảnh","Trang 2 – Nhóm 1"],["明天","míngtiān","ngày mai","Trang 2 – Nhóm 1"],["做","zuò","làm","Trang 2 – Nhóm 1"],["有空儿的时候","yǒu kòngr de shíhou","lúc rảnh","Trang 2 – Nhóm 1"],["什么时候","shénme shíhou","khi nào","Trang 2 – Nhóm 1"],["常常","chángcháng","thường xuyên","Trang 2 – Nhóm 1"],["去","qù","đi","Trang 2 – Nhóm 1"],["吧","ba","nhé","Trang 2 – Nhóm 1"],["欢迎","huānyíng","chào mừng","Trang 2 – Nhóm 1"],["玩","wán","chơi","Trang 2 – Nhóm 1"],["卫生间","wèishēngjiān","nhà vệ sinh","Trang 2 – Nhóm 1"],["洗手间","xǐshǒujiān","nhà vệ sinh","Trang 2 – Nhóm 1"],["教师","jiàoshī","giáo viên","Trang 2 – Nhóm 1"],["对","duì","đúng","Trang 2 – Nhóm 1"],["错","cuò","sai","Trang 2 – Nhóm 1"],["工作","gōngzuò","công việc","Trang 2 – Nhóm 2"],["公司","gōngsī","công ty","Trang 2 – Nhóm 2"],["住在","zhù zài","sống ở","Trang 2 – Nhóm 2"],["多少","duōshao","bao nhiêu","Trang 2 – Nhóm 2"],["岁","suì","tuổi","Trang 2 – Nhóm 2"],["出生","chūshēng","sinh ra","Trang 2 – Nhóm 2"],["几年","jǐ nián","mấy năm","Trang 2 – Nhóm 2"],["现在","xiànzài","bây giờ","Trang 2 – Nhóm 2"],["早上","zǎoshang","sáng sớm","Trang 2 – Nhóm 2"],["上午","shàngwǔ","buổi sáng","Trang 2 – Nhóm 2"],["中午","zhōngwǔ","buổi trưa","Trang 2 – Nhóm 2"],["下午","xiàwǔ","buổi chiều","Trang 2 – Nhóm 2"],["晚上","wǎnshang","buổi tối","Trang 2 – Nhóm 2"],["早安","zǎo'ān","chào buổi sáng","Trang 2 – Nhóm 2"],["晚安","wǎn'ān","chúc ngủ ngon","Trang 2 – Nhóm 2"],["点","diǎn","giờ","Trang 2 – Nhóm 2"],["分","fēn","phút","Trang 2 – Nhóm 2"],["半","bàn","rưỡi","Trang 2 – Nhóm 2"],["差","chà","kém","Trang 2 – Nhóm 2"],["刻","kè","15 phút","Trang 2 – Nhóm 2"],["秒","miǎo","giây","Trang 2 – Nhóm 2"],["上课","shàng kè","vào học","Trang 2 – Nhóm 2"],["下课","xià kè","tan học","Trang 2 – Nhóm 2"],["上班","shàngbān","đi làm","Trang 2 – Nhóm 2"],["下班","xiàbān","tan làm","Trang 2 – Nhóm 2"],["班","bān","lớp","Trang 2 – Nhóm 2"],["起床","qǐchuáng","thức dậy","Trang 2 – Nhóm 2"],["睡觉","shuìjiào","ngủ","Trang 2 – Nhóm 2"],["吃饭","chī fàn","ăn cơm","Trang 2 – Nhóm 2"],["喝","hē","uống","Trang 2 – Nhóm 2"],["早饭","zǎofàn","bữa sáng","Trang 2 – Nhóm 2"],["午饭","wǔfàn","bữa trưa","Trang 2 – Nhóm 2"],["晚饭","wǎnfàn","bữa tối","Trang 2 – Nhóm 2"],["大部分","dàbùfen","phần lớn","Trang 2 – Nhóm 2"],["部分","bùfen","phần","Trang 2 – Nhóm 2"],["太…了","tài…le","quá","Trang 2 – Nhóm 2"],["难","nán","khó","Trang 2 – Nhóm 2"],["累","lèi","mệt","Trang 2 – Nhóm 2"],["讲座","jiǎngzuò","buổi tọa đàm","Trang 2 – Nhóm 2"],["还是","háishi","hay là","Trang 2 – Nhóm 2"],["再见","zàijiàn","tạm biệt","Trang 2 – Nhóm 2"],["明天见","míngtiān jiàn","mai gặp","Trang 2 – Nhóm 2"],["一会儿","yíhuìr","một lát","Trang 2 – Nhóm 2"],["都","dōu","đều","Trang 2 – Nhóm 2"],["天","tiān","ngày","Trang 2 – Nhóm 2"],["月","yuè","tháng","Trang 2 – Nhóm 2"],["号","hào","ngày (trong tháng)","Trang 2 – Nhóm 3"],["节","jié","tiết","Trang 2 – Nhóm 3"],["今天","jīntiān","hôm nay","Trang 2 – Nhóm 3"],["自行车","zìxíngchē","xe đạp","Trang 2 – Nhóm 3"],["辆","liàng","chiếc (lượng từ cho xe)","Trang 2 – Nhóm 3"],["骑","qí","cưỡi, đi (xe)","Trang 2 – Nhóm 3"],["骑马","qí mǎ","cưỡi ngựa","Trang 2 – Nhóm 3"],["摩托车","mótuōchē","xe máy","Trang 2 – Nhóm 3"],["汽车","qìchē","ô tô","Trang 2 – Nhóm 3"],["公共汽车","gōnggòng qìchē","xe buýt","Trang 2 – Nhóm 3"],["出租车","chūzūchē","taxi","Trang 2 – Nhóm 3"],["坐","zuò","ngồi, đi (xe)","Trang 2 – Nhóm 3"],["火车","huǒchē","tàu hỏa","Trang 2 – Nhóm 3"],["飞机","fēijī","máy bay","Trang 2 – Nhóm 3"],["船","chuán","thuyền","Trang 2 – Nhóm 3"],["地铁","dìtiě","tàu điện ngầm","Trang 2 – Nhóm 3"],["考试","kǎoshì","thi","Trang 2 – Nhóm 3"],["没问题","méi wèntí","không vấn đề","Trang 2 – Nhóm 3"],["要是","yàoshi","nếu","Trang 2 – Nhóm 3"],["电影院","diànyǐngyuàn","rạp phim","Trang 2 – Nhóm 3"],["有名","yǒumíng","nổi tiếng","Trang 2 – Nhóm 3"],["昨天","zuótiān","hôm qua","Trang 2 – Nhóm 3"],["前天","qiántiān","hôm kia","Trang 2 – Nhóm 3"],["后天","hòutiān","ngày kia","Trang 2 – Nhóm 3"],["去年","qùnián","năm ngoái","Trang 2 – Nhóm 3"],["时间","shíjiān","thời gian","Trang 2 – Nhóm 3"],["事","shì","việc, chuyện","Trang 2 – Nhóm 3"],["同事","tóngshì","đồng nghiệp","Trang 2 – Nhóm 3"],["找","zhǎo","tìm","Trang 2 – Nhóm 3"],["件","jiàn","cái, việc (一件事)","Trang 2 – Nhóm 3"],["周末","zhōumò","cuối tuần","Trang 2 – Nhóm 3"],["星期","xīngqī","tuần, thứ","Trang 2 – Nhóm 3"],["周","zhōu","tuần","Trang 2 – Nhóm 3"],["啊","a","(cảm thán)","Trang 2 – Nhóm 3"],["不过","búguò","nhưng","Trang 2 – Nhóm 3"],["怎么","zěnme","thế nào","Trang 2 – Nhóm 3"],["还没","hái méi","vẫn chưa","Trang 2 – Nhóm 3"],["路","lù","đường","Trang 2 – Nhóm 4"],["手机","shǒujī","điện thoại","Trang 2 – Nhóm 4"],["号码","hàomǎ","số","Trang 2 – Nhóm 4"],["房间","fángjiān","phòng","Trang 2 – Nhóm 4"],["室","shì","phòng (教室, 办公室)","Trang 2 – Nhóm 4"],["和","hé","và, với","Trang 2 – Nhóm 4"],["到","dào","đến","Trang 2 – Nhóm 4"],["坏","huài","hỏng","Trang 2 – Nhóm 4"],["完","wán","xong","Trang 2 – Nhóm 4"],["分钟","fēnzhōng","phút","Trang 2 – Nhóm 4"],["校园","xiàoyuán","khuôn viên trường","Trang 2 – Nhóm 4"],["等","děng","đợi","Trang 2 – Nhóm 4"],["进","jìn","vào","Trang 2 – Nhóm 4"],["远","yuǎn","xa","Trang 2 – Nhóm 4"],["师傅","shīfu","bác tài, thợ","Trang 2 – Nhóm 4"],["售货员","shòuhuòyuán","người bán hàng","Trang 3"],["买","mǎi","mua","Trang 3"],["卖","mài","bán","Trang 3"],["可以","kěyǐ","có thể","Trang 3"],["啤酒","píjiǔ","bia","Trang 3"],["要","yào","muốn, cần, phải","Trang 3"],["想","xiǎng","muốn, nghĩ, nhớ","Trang 3"],["干杯","gānbēi","cạn ly","Trang 3"],["水","shuǐ","nước","Trang 3"],["瓶","píng","chai","Trang 3"],["一遍","yíbiàn","một lần, một lượt","Trang 3"],["可乐","kělè","coca","Trang 3"],["茶","chá","trà","Trang 3"],["牛奶","niúnǎi","sữa bò","Trang 3"],["奶茶","nǎichá","trà sữa","Trang 3"],["咖啡","kāfēi","cà phê","Trang 3"],["果汁","guǒzhī","nước ép","Trang 3"],["钱","qián","tiền","Trang 3"],["块","kuài","đồng (tệ)","Trang 3"],["毛","máo","hào (1/10 tệ)","Trang 3"],["芭蕾","bālěi","ba lê","Sách bài tập HSK 1"],["派","pài","bánh pie","Sách bài tập HSK 1"],["吉他","jítā","đàn guitar","Sách bài tập HSK 1"],["汉堡","hànbǎo","hamburger","Sách bài tập HSK 1"],["香槟","xiāngbīn","sâm panh","Sách bài tập HSK 1"],["麦克风","màikèfēng","micro","Sách bài tập HSK 1"],["巧克力","qiǎokèlì","sô-cô-la","Sách bài tập HSK 1"],["沙发","shāfā","ghế sofa","Sách bài tập HSK 1"],["商店","shāngdiàn","cửa hàng","Sách bài tập HSK 1"],["医院","yīyuàn","bệnh viện","Sách bài tập HSK 1"],["李","Lǐ","họ Lý","Sách bài tập HSK 1"],["刘","Liú","họ Lưu","Sách bài tập HSK 1"],["不知道","bù zhīdào","không biết","Sách bài tập HSK 1"],["美国人","Měiguó rén","người Mỹ","Sách bài tập HSK 1"],["中国人","Zhōngguó rén","người Trung Quốc","Sách bài tập HSK 1"],["日本人","Rìběn rén","người Nhật","Sách bài tập HSK 1"],["她","tā","cô ấy","Sách bài tập HSK 1"],["一些","yìxiē","một ít","Sách bài tập HSK 1"],["水果","shuǐguǒ","trái cây","Sách bài tập HSK 1"],["再","zài","lại, nữa, thêm","Mua bán, tiền (26/11)"],["一点儿","yìdiǎnr","một chút (số lượng)","Mua bán, tiền (26/11)"],["人民币","rénmínbì","Nhân dân tệ (RMB)","Mua bán, tiền (26/11)"],["越南盾","Yuènándùn","Việt Nam đồng (VND)","Mua bán, tiền (26/11)"],["这些","zhèxiē","những… này","Mua bán, tiền (26/11)"],["一共","yígòng","tổng cộng","Mua bán, tiền (26/11)"],["给","gěi","cho, đưa cho","Mua bán, tiền (26/11)"],["给你钱","gěi nǐ qián","đưa tiền cho bạn","Mua bán, tiền (26/11)"],["找你钱","zhǎo nǐ qián","thối tiền cho bạn","Mua bán, tiền (26/11)"],["水果店","shuǐguǒdiàn","tiệm trái cây","Mua bán, tiền (26/11)"],["贵","guì","đắt","Mua bán, tiền (26/11)"],["便宜","piányi","rẻ","Mua bán, tiền (26/11)"],["零钱","língqián","tiền lẻ","Mua bán, tiền (26/11)"],["元","yuán","đồng tệ (văn viết)","Mua bán, tiền (26/11)"],["角","jiǎo","hào (văn viết)","Mua bán, tiền (26/11)"],["百","bǎi","trăm","Mua bán, tiền (26/11)"],["千","qiān","nghìn","Mua bán, tiền (26/11)"],["万","wàn","vạn (10.000)","Mua bán, tiền (26/11)"],["都是","dōu shì","đều là","Mua bán, tiền (26/11)"],["都不是","dōu bú shì","đều không phải","Mua bán, tiền (26/11)"],["不都是","bù dōu shì","không phải tất cả đều là","Mua bán, tiền (26/11)"]];
+const ALL=RAW.map((r,i)=>({id:i,h:r[0],p:r[1],v:r[2],g:r[3]}));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(k,d){try{const v=localStorage.getItem('qz-'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('qz-'+k,JSON.stringify(v))}catch(e){}}};
+let stars=new Set(store.get('stars',[]));
+const strip=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d');
+const nPy=s=>s.toLowerCase().replace(/[\s'’…·-]/g,'');
+const nVi=s=>s.toLowerCase().replace(/\(.*?\)/g,' ').replace(/[.,;:!?"]/g,' ').replace(/\s+/g,' ').trim();
+function checkPy(ans,w){const a=nPy(ans);if(!a)return 0;if(a===nPy(w.p))return 2;if(strip(a)===strip(nPy(w.p)))return 1;return 0}
+function checkVi(ans,w){const a=nVi(ans);if(!a)return 0;const parts=[nVi(w.v),...w.v.split(/[,/;]/).map(nVi)].filter(Boolean);
+  if(parts.includes(a))return 2;if(parts.map(strip).includes(strip(a)))return 1;return 0}
+function say(t){try{const u=new SpeechSynthesisUtterance(t.replace(/…/g,''));u.lang='zh-CN';u.rate=.8;const v=speechSynthesis.getVoices().find(v=>/zh[-_]CN/i.test(v.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+const groups=[...new Set(ALL.map(w=>w.g))];
+$('set').innerHTML=`<option value="*">Tất cả (${ALL.length} từ)</option>`+groups.map(g=>`<option value="${esc(g)}">${esc(g)} (${ALL.filter(w=>w.g===g).length})</option>`).join('');
+const sv=store.get('set','*');if([...$('set').options].some(o=>o.value===sv))$('set').value=sv;
+let starOnly=store.get('staronly',false);
+function words(){let w=$('set').value==='*'?ALL:ALL.filter(x=>x.g===$('set').value);if(starOnly)w=w.filter(x=>stars.has(x.id));return w}
+function distract(w,n,key){return shuf(ALL.filter(x=>x.id!==w.id&&x[key]!==w[key])).slice(0,n)}
+const st=$('stage');let mode='cards',keyH=null;
+document.addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key==='Enter'||e.key===' '))return;if(keyH&&!(e.target.tagName==='INPUT'&&!['Enter'].includes(e.key)))keyH(e)});
+function empty(){st.innerHTML=`<p class="q">Chưa có từ nào.</p><p class="lbl">${starOnly?'Bạn chưa gắn sao từ nào trong nhóm này. Bấm ☆ trên thẻ để gắn sao.':'Nhóm này trống.'}</p>`;keyH=null}
+
+/* ---------- THẺ GHI NHỚ ---------- */
+let C={list:[],i:0,front:'h'};
+function cards(re){const w=words();if(!w.length)return empty();if(re||!C.list.length||C.src!==w)C={list:w.slice(),i:0,front:C.front||'h',src:w};drawCard()}
+function drawCard(){const w=C.list[C.i],fh=C.front==='h';
+  const A=`<div class="hz">${esc(w.h)}</div>`,B=`<div class="py">${esc(w.p)}</div><div class="vi">${esc(w.v)}</div>`;
+  st.innerHTML=`<div class="meta"><span>${C.i+1} / ${C.list.length}</span><span>Space: lật · ← →: chuyển</span></div>
+  <div class="flip" id="fc"><div class="in"><div class="face"><button class="star ${stars.has(w.id)?'on':''}" id="stb" aria-label="Gắn sao">${stars.has(w.id)?'★':'☆'}</button>${fh?A:`<div class="vi">${esc(w.v)}</div>`}</div><div class="face b">${fh?B:A+`<div class="py">${esc(w.p)}</div>`}</div></div></div>
+  <div class="bar" style="justify-content:center;margin-top:14px"><button class="btn" id="pv">← Trước</button><button class="btn" id="sy">🔊 Nghe</button><button class="btn" id="sh">Trộn thẻ</button><button class="btn" id="fr">Mặt trước: ${fh?'Hán tự':'Nghĩa'}</button><button class="btn pri" id="nx">Sau →</button></div>`;
+  const flip=()=>{$('fc').classList.toggle('back');if($('fc').classList.contains('back'))say(w.h)};
+  $('fc').onclick=e=>{if(e.target.id!=='stb')flip()};
+  $('stb').onclick=()=>{stars.has(w.id)?stars.delete(w.id):stars.add(w.id);store.set('stars',[...stars]);drawCard()};
+  const mv=d=>{C.i=(C.i+d+C.list.length)%C.list.length;drawCard()};
+  $('pv').onclick=()=>mv(-1);$('nx').onclick=()=>mv(1);$('sy').onclick=()=>say(w.h);
+  $('sh').onclick=()=>{C.list=shuf(C.list);C.i=0;drawCard()};
+  $('fr').onclick=()=>{C.front=fh?'v':'h';drawCard()};
+  keyH=e=>{if(e.key===' '){e.preventDefault();flip()}else if(e.key==='ArrowRight')mv(1);else if(e.key==='ArrowLeft')mv(-1)}}
+
+/* ---------- HỌC (thích ứng) ---------- */
+let L=null;
+function learn(re){const w=words();if(!w.length)return empty();
+  if(re||!L||L.src!==w)L={src:w,lv:Object.fromEntries(w.map(x=>[x.id,0])),round:[],ri:0,miss:{}};
+  nextLearn()}
+function nextLearn(){const ids=Object.keys(L.lv).map(Number),left=ids.filter(i=>L.lv[i]<2);
+  const done=ids.length-left.length;
+  if(!left.length){st.innerHTML=`<div class="big">Xong!</div><p>Bạn đã thuộc cả ${ids.length} từ ở hai bước: chọn nghĩa và gõ pinyin.</p><div class="bar"><button class="btn pri" id="again">Học lại từ đầu</button></div>`;$('again').onclick=()=>learn(true);keyH=null;return}
+  if(L.ri>=L.round.length){L.round=shuf(left).slice(0,7);L.ri=0}
+  const w=ALL[L.round[L.ri]],lv=L.lv[w.id];
+  const head=`<div class="prog"><i style="width:${(ids.reduce((s,i)=>s+L.lv[i],0)/(ids.length*2)*100).toFixed(1)}%"></i></div><div class="meta"><span>Đã thuộc ${done}/${ids.length}</span><span>${lv===0?'Bước 1: chọn nghĩa':'Bước 2: gõ pinyin'}</span></div>`;
+  if(lv===0)mcq(w,head,ok=>{L.lv[w.id]=ok?1:0;L.ri++;},nextLearn);
+  else typeQ(w,'p',head,ok=>{L.lv[w.id]=ok?2:0;L.ri++;},nextLearn)}
+
+/* trắc nghiệm dùng chung */
+function mcq(w,head,onAns,onNext,rev){
+  const key=rev?'h':'v',opts=shuf([w,...distract(w,3,key)]);
+  st.innerHTML=`${head}<div class="lbl">${rev?'Chọn chữ Hán đúng':'Chọn nghĩa đúng'}</div><div class="q">${rev?esc(w.v):`<span class="hz">${esc(w.h)}</span>`}</div>
+  <div class="opts">${opts.map((o,k)=>`<button class="opt" data-id="${o.id}"><kbd>${k+1}</kbd>${rev?`<span class="hz">${esc(o.h)}</span>`:esc(o.v)}</button>`).join('')}</div>
+  <div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button></div>`;
+  let done=false;const pick=b=>{if(done)return;done=true;const ok=+b.dataset.id===w.id;b.classList.add(ok?'ok':'no');st.querySelector(`.opt[data-id="${w.id}"]`).classList.add('ok');
+    $('fb').className='fb '+(ok?'ok':'no');$('fb').innerHTML=`<b>${ok?'Chính xác!':'Chưa đúng'}</b><span class="hz">${esc(w.h)}</span> · ${esc(w.p)} · ${esc(w.v)}`;say(w.h);onAns(ok);
+    $('go').classList.remove('hide');$('cont').focus();$('cont').onclick=onNext};
+  st.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b));
+  keyH=e=>{if(!done&&/^[1-4]$/.test(e.key))pick(st.querySelectorAll('.opt')[e.key-1]);else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+/* gõ đáp án dùng chung: key 'p' gõ pinyin, 'v' gõ nghĩa */
+function typeQ(w,key,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">${key==='p'?'Gõ pinyin (có hoặc không dấu thanh)':'Gõ nghĩa tiếng Việt'}</div><div class="q"><span class="hz">${esc(w.h)}</span>${key==='v'?`<span class="lbl" style="font-weight:400">${esc(w.p)}</span>`:''}</div>
+  <form class="typ" id="tf"><input id="ti" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Câu trả lời"><button class="btn pri">Kiểm tra</button><button type="button" class="btn" id="idk">Không biết</button></form>
+  <div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button><button class="btn hide" id="ovr">Tôi đã trả lời đúng</button></div>`;
+  $('ti').focus();let done=false;
+  const fin=r=>{if(done)return;done=true;const ok=r>0;$('ti').disabled=true;
+    $('fb').className='fb '+(ok?'ok':'no');
+    $('fb').innerHTML=`<b>${r===2?'Chính xác!':r===1?(key==='p'?'Đúng, nhưng thiếu/sai dấu thanh':'Đúng, nhưng thiếu dấu'):'Chưa đúng'}</b>Đáp án: <span class="hz">${esc(w.h)}</span> · ${esc(w.p)} · ${esc(w.v)}`;
+    say(w.h);onAns(ok);$('go').classList.remove('hide');if(!ok&&$('ti').value.trim())$('ovr').classList.remove('hide');
+    $('ovr').onclick=()=>{onAns(true);$('ovr').classList.add('hide');$('fb').className='fb ok';$('fb').querySelector('b').textContent='Đã tính là đúng'};
+    setTimeout(()=>$('cont').focus(),0);$('cont').onclick=onNext};
+  $('tf').onsubmit=e=>{e.preventDefault();if(done)return onNext();const v=$('ti').value;if(!v.trim())return;fin(key==='p'?checkPy(v,w):checkVi(v,w))};
+  $('idk').onclick=()=>fin(0);
+  keyH=e=>{if(done&&e.key==='Enter'&&e.target.tagName!=='INPUT'){e.preventDefault();onNext()}}}
+
+/* ---------- GÕ ĐÁP ÁN ---------- */
+let W=null;
+function write(re){const w=words();if(!w.length)return empty();if(re||!W||W.src!==w)W={src:w,list:shuf(w),i:0,ok:0,key:W?W.key:'p',wrong:[]};nextWrite()}
+function nextWrite(){if(W.i>=W.list.length){result('Gõ đáp án',W.ok,W.list.length,W.wrong,()=>write(true));return}
+  const w=W.list[W.i];
+  const head=`<div class="prog"><i style="width:${W.i/W.list.length*100}%"></i></div><div class="meta"><span>${W.i+1} / ${W.list.length} · đúng ${W.ok}</span><button class="btn" id="sw" style="min-height:36px">Gõ: ${W.key==='p'?'pinyin':'nghĩa'}</button></div>`;
+  typeQ(w,W.key,head,ok=>{if(ok){W.ok++;W.wrong=W.wrong.filter(x=>x!==w)}else if(!W.wrong.includes(w))W.wrong.push(w)},()=>{W.i++;nextWrite()});
+  $('sw').onclick=()=>{W.key=W.key==='p'?'v':'p';nextWrite()}}
+
+/* ---------- KIỂM TRA ---------- */
+let T=null;
+function test(){const w=words();if(!w.length)return empty();
+  st.innerHTML=`<div class="q">Bài kiểm tra</div><p class="lbl">Trộn trắc nghiệm, đúng/sai và gõ đáp án. Chấm điểm ở cuối.</p>
+  <div class="bar"><label class="lbl" for="tn">Số câu</label><select id="tn">${[5,10,20,30,50].filter(x=>x<w.length).map(x=>`<option ${x===20?'selected':''}>${x}</option>`).join('')}<option value="${w.length}" ${w.length<=20?'selected':''}>Tất cả (${w.length})</option></select><button class="btn pri" id="ts">Bắt đầu</button></div>`;
+  keyH=null;$('ts').onclick=()=>{const k=+$('tn').value;T={list:shuf(w).slice(0,k),i:0,ok:0,wrong:[]};nextTest()}}
+function nextTest(){if(T.i>=T.list.length){result('Kiểm tra',T.ok,T.list.length,T.wrong,test);return}
+  const w=T.list[T.i],head=`<div class="prog"><i style="width:${T.i/T.list.length*100}%"></i></div><div class="meta"><span>Câu ${T.i+1} / ${T.list.length}</span><span></span></div>`;
+  const on=ok=>{if(ok)T.ok++;else T.wrong.push(w)},nx=()=>{T.i++;nextTest()},kind=T.i%4;
+  if(kind===0)mcq(w,head,on,nx);else if(kind===1)mcq(w,head,on,nx,true);else if(kind===2)typeQ(w,'p',head,on,nx);else tf(w,head,on,nx)}
+function tf(w,head,onAns,onNext){const real=Math.random()<.5,o=real?w:distract(w,1,'v')[0];
+  st.innerHTML=`${head}<div class="lbl">Đúng hay sai?</div><div class="q"><span class="hz">${esc(w.h)}</span>= ${esc(o.v)}</div>
+  <div class="opts"><button class="opt" data-a="1"><kbd>1</kbd>Đúng</button><button class="opt" data-a="0"><kbd>2</kbd>Sai</button></div>
+  <div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button></div>`;
+  let done=false;const pick=b=>{if(done)return;done=true;const ok=(b.dataset.a==='1')===real;b.classList.add(ok?'ok':'no');
+    $('fb').className='fb '+(ok?'ok':'no');$('fb').innerHTML=`<b>${ok?'Chính xác!':'Chưa đúng'}</b><span class="hz">${esc(w.h)}</span> · ${esc(w.p)} · ${esc(w.v)}`;say(w.h);onAns(ok);
+    $('go').classList.remove('hide');$('cont').focus();$('cont').onclick=onNext};
+  st.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b));
+  keyH=e=>{if(!done&&(e.key==='1'||e.key==='2'))pick(st.querySelectorAll('.opt')[e.key-1]);else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+function result(name,ok,n,wrong,again){const pct=Math.round(ok/n*100);
+  st.innerHTML=`<div class="lbl">${esc(name)}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':pct>=50?'inherit':'var(--red)'}">${pct}%</div><p>Đúng ${ok}/${n} câu.</p>
+  <div class="bar"><button class="btn pri" id="ag">Làm lại</button>${wrong.length?`<button class="btn" id="stw">★ Gắn sao ${wrong.length} từ sai</button>`:''}</div>
+  ${wrong.length?`<ul class="res">${wrong.map(w=>`<li><span class="hz">${esc(w.h)}</span><span><span style="color:var(--red)">${esc(w.p)}</span> · ${esc(w.v)}</span></li>`).join('')}</ul>`:''}`;
+  keyH=null;$('ag').onclick=()=>again();if(wrong.length)$('stw').onclick=()=>{wrong.forEach(w=>stars.add(w.id));store.set('stars',[...stars]);$('stw').textContent='Đã gắn sao. Bật "★ Chỉ từ gắn sao" để ôn';$('stw').disabled=true}}
+
+/* ---------- GHÉP THẺ ---------- */
+let M=null,timer=null;
+function match(){const w=words();clearInterval(timer);if(w.length<2)return empty();
+  const best=store.get('best-'+$('set').value,null);
+  st.innerHTML=`<div class="q">Ghép thẻ</div><p class="lbl">Ghép chữ Hán với nghĩa của nó, càng nhanh càng tốt. Chọn sai bị cộng 1 giây.</p>${best?`<p>Kỷ lục nhóm này: <b>${best.toFixed(1)} giây</b></p>`:''}<button class="btn pri" id="ms">Bắt đầu</button>`;
+  keyH=null;$('ms').onclick=()=>startMatch(w)}
+function startMatch(w){const pick=shuf(w).slice(0,6),tiles=shuf(pick.flatMap(x=>[{id:x.id,t:'h',s:x.h},{id:x.id,t:'v',s:x.v}]));
+  M={left:pick.length,sel:null,t0:performance.now(),pen:0};
+  st.innerHTML=`<div class="meta"><span>Ghép thẻ</span><span id="clk">0.0 giây</span></div><div class="grid">${tiles.map((x,k)=>`<button class="tile" data-k="${k}" data-id="${x.id}">${x.t==='h'?`<span class="hz">${esc(x.s)}</span>`:esc(x.s)}</button>`).join('')}</div>`;
+  const now=()=>(performance.now()-M.t0)/1000+M.pen;
+  timer=setInterval(()=>{if($('clk'))$('clk').textContent=now().toFixed(1)+' giây'},100);
+  st.querySelectorAll('.tile').forEach(b=>b.onclick=()=>{
+    if(!M.sel){M.sel=b;b.classList.add('sel');return}
+    if(M.sel===b){b.classList.remove('sel');M.sel=null;return}
+    const a=M.sel;M.sel=null;a.classList.remove('sel');
+    if(a.dataset.id===b.dataset.id){a.classList.add('gone');b.classList.add('gone');say(ALL[+a.dataset.id].h);
+      if(--M.left===0){clearInterval(timer);const t=now(),k='best-'+$('set').value,best=store.get(k,null),rec=!best||t<best;if(rec)store.set(k,t);
+        st.innerHTML=`<div class="lbl">Hoàn thành</div><div class="big">${t.toFixed(1)} giây</div><p>${rec?'Kỷ lục mới!':'Kỷ lục: '+best.toFixed(1)+' giây'}</p><button class="btn pri" id="ms">Chơi lại</button>`;$('ms').onclick=()=>startMatch(words())}}
+    else{M.pen+=1;[a,b].forEach(x=>{x.classList.add('no');setTimeout(()=>x.classList.remove('no'),400)})}})}
+
+/* ---------- điều hướng ---------- */
+const MODES={cards,learn,write,test,match};
+const NOTES={cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+function go(m,re){mode=m;clearInterval(timer);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
+  $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
+$('set').onchange=()=>{store.set('set',$('set').value);go(mode,true)};
+const sb=()=>{$('starOnly').classList.toggle('on',starOnly);$('starOnly').setAttribute('aria-pressed',starOnly)};
+$('starOnly').onclick=()=>{starOnly=!starOnly;store.set('staronly',starOnly);sb();go(mode,true)};sb();
+const h=(location.hash||'').slice(1);go(MODES[h]?h:'cards',true);
+}
+</script>
+</body>
+</html>
