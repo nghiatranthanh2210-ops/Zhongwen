@@ -91,6 +91,9 @@ select{font-size:16px;max-width:100%}
 .plist .mk{min-height:40px;min-width:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;font-size:18px}
 .plist .mk.on{border-color:var(--ok);background:var(--okbg)}
 @media(max-width:600px){.plist li{grid-template-columns:26px minmax(0,1fr) auto;}.plist .ans{grid-column:2}}
+.ord{display:flex;flex-wrap:wrap;gap:8px;min-height:60px;padding:10px;border-radius:12px;border:1.5px dashed var(--line);margin-bottom:10px;align-items:center}.ord.pool{border:0;padding:0}
+.chip{font-family:"Noto Serif SC",serif;font-size:22px;min-height:48px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer}.chip.on{border-color:var(--red)}
+.btn:disabled,.chip:disabled{opacity:.55;cursor:not-allowed}
 .spk{display:flex;justify-content:center;margin:6px 0 16px}.spk button{width:96px;height:96px;border-radius:50%;font-size:40px;border:2px solid var(--red);background:var(--bg);cursor:pointer}
 @media(max-width:600px){.opts{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:84px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -109,6 +112,7 @@ select{font-size:16px;max-width:100%}
 <div class="toast" id="toast" role="status"></div>
 <div class="tabs" role="tablist">
   <button role="tab" data-m="tower" aria-selected="true">Vượt màn</button>
+  <button role="tab" data-m="skills" aria-selected="false">Nghe Nói Đọc Viết</button>
   <button role="tab" data-m="cards" aria-selected="false">Thẻ ghi nhớ</button>
   <button role="tab" data-m="paper" aria-selected="false">Viết ra giấy</button>
   <button role="tab" data-m="learn" aria-selected="false">Học</button>
@@ -157,9 +161,10 @@ const dayN=()=>{const d=new Date();return Math.floor((d-d.getTimezoneOffset()*6e
 function realmOf(x){const L=Math.floor((1+Math.sqrt(1+8*x/100))/2),lo=50*L*(L-1),hi=50*(L+1)*L;return{i:L,name:'Level '+L,f:(x-lo)/(hi-lo),lo,hi}}
 function cult(){const r=realmOf(XP),today=dayN(),alive=STK.d===today||STK.d===today-1;
   $('cult').innerHTML=`<span class="realm">${r.name}</span><div class="xpbar" title="${XP} điểm"><i style="width:${(r.f*100).toFixed(1)}%"></i></div><span class="xpn">${XP} / ${r.hi} điểm</span><span class="fire" title="Chuỗi ngày học liên tục">🔥 ${alive?STK.n:0} ngày</span>`}
+function touchStreak(){const today=dayN();if(STK.d!==today){STK={d:today,n:STK.d===today-1?STK.n+1:1};store.set('streak',STK);if(STK.n>1)toast(`🔥 Chuỗi ${STK.n} ngày liên tục!`)}cult()}
 let toastT=0;function toast(m){$('toast').textContent=m;$('toast').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toast').classList.remove('on'),2600)}
 function gain(n){if(!n)return;const before=realmOf(XP);XP+=n;store.set('xp',XP);
-  const today=dayN();if(STK.d!==today){STK={d:today,n:STK.d===today-1?STK.n+1:1};store.set('streak',STK);if(STK.n>1)toast(`🔥 Chuỗi ${STK.n} ngày liên tục!`)}
+  touchStreak();
   const after=realmOf(XP);if(after.i>before.i)toast(`🎉 Lên ${after.name}!`);cult()}
 
 /* câu nghe: nghe phát âm, chọn nghĩa hoặc chữ Hán */
@@ -253,18 +258,34 @@ function drawCard(){const w=C.list[C.i],fh=C.front==='h';
   keyH=e=>{if(e.key===' '){e.preventDefault();flip()}else if(e.key==='ArrowRight')mv(1);else if(e.key==='ArrowLeft')mv(-1)}}
 
 /* ---------- HỌC (thích ứng) ---------- */
-let L=null;
-function learn(re){const w=words();if(!w.length)return empty();
-  if(re||!L||L.src!==w)L={src:w,lv:Object.fromEntries(w.map(x=>[x.id,0])),round:[],ri:0,miss:{}};
-  nextLearn()}
+const LSZ=20,LESS=[];for(let i=0;i<ALL.length;i+=LSZ)LESS.push(ALL.slice(i,i+LSZ));
+let LS=store.get('lessons',{prog:{},done:[],log:[]}),L=null;
+const nKnown=p=>p?Object.values(p).filter(v=>v>=2).length:0;
+function learn(){L=null;const cur=LESS.findIndex((_,i)=>!LS.done.includes(i)),last=LS.log[LS.log.length-1],tot=Object.values(LS.prog).reduce((s,p)=>s+nKnown(p),0);
+  st.innerHTML=`<div class="q">Học theo bài · ${LESS.length} bài × ${LSZ} từ</div><p class="lbl">Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Tiến độ tự lưu sau mỗi câu. Bấm 💾 Lưu bài để chốt buổi học hôm nay (giữ chuỗi 🔥); lần sau bấm Tiếp tục để học đúng chỗ đang dừng.</p>
+  ${last?`<p class="small">Lần lưu gần nhất: Bài ${last.l+1}, thuộc ${last.n} từ, ${new Date(last.t).toLocaleDateString('vi-VN')}. Tổng đã thuộc: ${tot}/${ALL.length} từ.</p>`:''}
+  <div class="bar" style="margin-bottom:12px">${cur>=0?`<button class="btn pri" id="c0">▶ ${LS.prog[cur]?'Tiếp tục':'Bắt đầu'} Bài ${cur+1}</button>`:''}<button class="btn" id="free">Học tự do theo nhóm đang chọn</button></div>
+  <div class="tower">${LESS.map((ws,i)=>{const d=LS.done.includes(i),p=LS.prog[i];
+    return `<button class="floor ${i===cur?'cur':''}" data-i="${i}"><span class="n">${i+1}</span><span><span class="t">Bài ${i+1}</span><br><span class="s">${ws.slice(0,6).map(w=>esc(w.h)).join(' · ')} …</span></span><span class="small">${d?'✓ Xong':p?nKnown(p)+'/'+ws.length:''}</span></button>`}).join('')}</div>`;
+  keyH=null;st.querySelectorAll('.floor').forEach(b=>b.onclick=()=>startLesson(+b.dataset.i));$('free').onclick=startFree;if($('c0'))$('c0').onclick=()=>startLesson(cur)}
+function startLesson(i){const p=LS.prog[i],fresh=!p||Object.values(p).every(v=>v>=2);
+  L={lesson:i,lv:fresh?Object.fromEntries(LESS[i].map(x=>[x.id,0])):{...p},round:[],ri:0};nextLearn()}
+function startFree(){const w=words();if(!w.length)return empty();L={lesson:null,lv:Object.fromEntries(w.map(x=>[x.id,0])),round:[],ri:0};nextLearn()}
+function saveLesson(fin){const i=L.lesson,n=nKnown(L.lv);LS.prog[i]={...L.lv};if(fin&&!LS.done.includes(i))LS.done.push(i);
+  LS.log.push({t:Date.now(),l:i,n});LS.log=LS.log.slice(-90);store.set('lessons',LS);touchStreak();return n}
 function nextLearn(){const ids=Object.keys(L.lv).map(Number),left=ids.filter(i=>L.lv[i]<2);
   const done=ids.length-left.length;
-  if(!left.length){st.innerHTML=`<div class="big">Xong!</div><p>Bạn đã thuộc cả ${ids.length} từ ở hai bước: chọn nghĩa và gõ pinyin.</p><div class="bar"><button class="btn pri" id="again">Học lại từ đầu</button></div>`;$('again').onclick=()=>learn(true);keyH=null;return}
+  if(L.lesson!=null){LS.prog[L.lesson]={...L.lv};store.set('lessons',LS)}
+  if(!left.length&&L.lesson!=null){const i=L.lesson;saveLesson(true);gain(50);
+    st.innerHTML=`<div class="big">Xong Bài ${i+1}!</div><p>Đã thuộc cả ${ids.length} từ. Đã lưu bài, +50 điểm.</p><div class="bar">${i+1<LESS.length?`<button class="btn pri" id="nxl">Bài ${i+2} →</button>`:''}<button class="btn" id="bkl">Danh sách bài</button><button class="btn" id="again">Học lại bài này</button></div>`;
+    if($('nxl'))$('nxl').onclick=()=>startLesson(i+1);$('bkl').onclick=learn;$('again').onclick=()=>startLesson(i);keyH=null;return}
+  if(!left.length){st.innerHTML=`<div class="big">Xong!</div><p>Bạn đã thuộc cả ${ids.length} từ ở hai bước: chọn nghĩa và gõ pinyin.</p><div class="bar"><button class="btn pri" id="again">Học lại từ đầu</button></div>`;$('again').onclick=startFree;keyH=null;return}
   if(L.ri>=L.round.length){L.round=shuf(left).slice(0,7);L.ri=0}
   const w=ALL[L.round[L.ri]],lv=L.lv[w.id];
-  const head=`<div class="prog"><i style="width:${(ids.reduce((s,i)=>s+L.lv[i],0)/(ids.length*2)*100).toFixed(1)}%"></i></div><div class="meta"><span>Đã thuộc ${done}/${ids.length}</span><span>${lv===0?'Bước 1: chọn nghĩa':'Bước 2: gõ pinyin'}</span></div>`;
+  const head=`<div class="prog"><i style="width:${(ids.reduce((s,i)=>s+L.lv[i],0)/(ids.length*2)*100).toFixed(1)}%"></i></div><div class="meta"><span>${L.lesson!=null?'Bài '+(L.lesson+1)+' · ':''}Đã thuộc ${done}/${ids.length}</span><span>${lv===0?'Bước 1: chọn nghĩa':'Bước 2: gõ pinyin'}${L.lesson!=null?' <button class="btn" id="svl" style="min-height:34px;padding:0 10px;margin-left:8px">💾 Lưu bài</button>':''}</span></div>`;
   if(lv===0)mcq(w,head,ok=>{L.lv[w.id]=ok?1:0;L.ri++;},nextLearn);
-  else typeQ(w,'p',head,ok=>{L.lv[w.id]=ok?2:0;L.ri++;},nextLearn)}
+  else typeQ(w,'p',head,ok=>{L.lv[w.id]=ok?2:0;L.ri++;},nextLearn);
+  if($('svl'))$('svl').onclick=()=>{const n=saveLesson(false);toast(`💾 Đã lưu Bài ${L.lesson+1}: thuộc ${n}/${ids.length} từ. Lần sau học tiếp từ đây.`);learn()}}
 
 /* trắc nghiệm dùng chung */
 function mcq(w,head,onAns,onNext,rev){
@@ -347,9 +368,97 @@ function startMatch(w){const pick=shuf(w).slice(0,6),tiles=shuf(pick.flatMap(x=>
         st.innerHTML=`<div class="lbl">Hoàn thành</div><div class="big">${t.toFixed(1)} giây</div><p>${rec?'Kỷ lục mới!':'Kỷ lục: '+best.toFixed(1)+' giây'}</p><button class="btn pri" id="ms">Chơi lại</button>`;$('ms').onclick=()=>startMatch(words())}}
     else{M.pen+=1;[a,b].forEach(x=>{x.classList.add('no');setTimeout(()=>x.classList.remove('no'),400)})}})}
 
+/* ---------- 4 KỸ NĂNG: nghe nói đọc viết ---------- */
+const SRAW=[["我|是|越南人","wǒ shì Yuènán rén","Tôi là người Việt Nam."],["你|叫|什么|名字？","nǐ jiào shénme míngzi?","Bạn tên là gì?"],["我|很|高兴|认识|你","wǒ hěn gāoxìng rènshi nǐ","Tôi rất vui được quen bạn."],["他|是|我|的|朋友","tā shì wǒ de péngyou","Anh ấy là bạn của tôi."],["你|是|哪|国|人？","nǐ shì nǎ guó rén?","Bạn là người nước nào?"],["她|是|中国人|吗？","tā shì Zhōngguó rén ma?","Cô ấy là người Trung Quốc à?"],["我|喜欢|听|音乐","wǒ xǐhuan tīng yīnyuè","Tôi thích nghe nhạc."],["我|有|两本|书","wǒ yǒu liǎng běn shū","Tôi có hai quyển sách."],["图书馆|在|哪儿？","túshūguǎn zài nǎr?","Thư viện ở đâu?"],["教室|在|图书馆|旁边","jiàoshì zài túshūguǎn pángbiān","Phòng học ở bên cạnh thư viện."],["现在|几|点？","xiànzài jǐ diǎn?","Bây giờ mấy giờ?"],["我|早上|七点|起床","wǒ zǎoshang qī diǎn qǐchuáng","Tôi dậy lúc 7 giờ sáng."],["你|明天|有空儿|吗？","nǐ míngtiān yǒu kòngr ma?","Ngày mai bạn rảnh không?"],["我们|一起|去|看|电影|吧","wǒmen yìqǐ qù kàn diànyǐng ba","Chúng ta cùng đi xem phim nhé."],["我|坐|地铁|去|公司","wǒ zuò dìtiě qù gōngsī","Tôi đi tàu điện ngầm đến công ty."],["他|骑|自行车|去|学校","tā qí zìxíngchē qù xuéxiào","Anh ấy đi xe đạp đến trường."],["这个|多少|钱？","zhège duōshao qián?","Cái này bao nhiêu tiền?"],["太|贵|了","tài guì le","Đắt quá."],["我|要|一瓶|水","wǒ yào yì píng shuǐ","Tôi muốn một chai nước."],["一共|三十|块","yígòng sānshí kuài","Tổng cộng 30 tệ."],["我|想|喝|咖啡","wǒ xiǎng hē kāfēi","Tôi muốn uống cà phê."],["汉语|不|太|难","Hànyǔ bú tài nán","Tiếng Hán không khó lắm."],["我|在|公司|工作","wǒ zài gōngsī gōngzuò","Tôi làm việc ở công ty."],["你|家|在|哪里？","nǐ jiā zài nǎlǐ?","Nhà bạn ở đâu?"],["我|今天|很|忙","wǒ jīntiān hěn máng","Hôm nay tôi rất bận."],["她|会|说|汉语","tā huì shuō Hànyǔ","Cô ấy biết nói tiếng Hán."],["我们|都|是|学生","wǒmen dōu shì xuésheng","Chúng tôi đều là học sinh."],["你|喝|茶|还是|喝|咖啡？","nǐ hē chá háishi hē kāfēi?","Bạn uống trà hay uống cà phê?"],["我|晚上|十一点|睡觉","wǒ wǎnshang shíyī diǎn shuìjiào","Tôi ngủ lúc 11 giờ tối."],["我|的|手机|坏|了","wǒ de shǒujī huài le","Điện thoại của tôi hỏng rồi."],["请问，|洗手间|在|哪儿？","qǐngwèn, xǐshǒujiān zài nǎr?","Xin hỏi, nhà vệ sinh ở đâu?"],["对不起，|我|不|知道","duìbuqǐ, wǒ bù zhīdào","Xin lỗi, tôi không biết."],["周末|你|常常|做|什么？","zhōumò nǐ chángcháng zuò shénme?","Cuối tuần bạn thường làm gì?"],["我|的|爱好|是|看|电影","wǒ de àihào shì kàn diànyǐng","Sở thích của tôi là xem phim."],["医院|在|商店|对面","yīyuàn zài shāngdiàn duìmiàn","Bệnh viện ở đối diện cửa hàng."],["昨天|我|没有|去|上班","zuótiān wǒ méiyǒu qù shàngbān","Hôm qua tôi không đi làm."],["他|是|我|的|同事","tā shì wǒ de tóngshì","Anh ấy là đồng nghiệp của tôi."],["我|下午|五点|下班","wǒ xiàwǔ wǔ diǎn xiàbān","Tôi tan làm lúc 5 giờ chiều."],["这些|水果|很|便宜","zhèxiē shuǐguǒ hěn piányi","Những trái cây này rất rẻ."],["你|的|手机|号码|是|多少？","nǐ de shǒujī hàomǎ shì duōshao?","Số điện thoại của bạn là bao nhiêu?"]];
+const SENT=SRAW.map((r,i)=>({id:i,t:r[0].split('|'),h:r[0].replace(/\|/g,''),p:r[1],v:r[2]}));
+const plain=s=>s.replace(/[，。？！、,.?!\s]/g,''),dg=s=>s.replace(/\d/g,c=>'零一二三四五六七八九'[c]);
+function sim(a,b){if(!a||!b)return 0;const m=a.length,n=b.length,d=Array(n+1).fill(0);for(let i=1;i<=m;i++){let pv=0;for(let j=1;j<=n;j++){const t=d[j];d[j]=a[i-1]===b[j-1]?pv+1:Math.max(d[j],d[j-1]);pv=t}}return d[n]/Math.max(m,n)}
+const TAIL=`<div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button></div>`;
+function fbShow(ok,x,onAns,onNext,title){$('fb').className='fb '+(ok?'ok':'no');$('fb').innerHTML=`<b>${title||(ok?'Chính xác!':'Chưa đúng')}</b><span class="hz">${esc(x.h)}</span> · ${esc(x.p)} · ${esc(x.v)}`;onAns(ok);$('go').classList.remove('hide');setTimeout(()=>$('cont').focus(),0);$('cont').onclick=onNext}
+const SKILLS={listen:['🎧','Nghe','Nghe câu chọn nghĩa · nghe từ gõ pinyin'],speak:['🗣️','Nói','Đọc to từ và câu, máy nghe và chấm (hoặc tự chấm)'],read:['📖','Đọc','Đọc câu chữ Hán, chọn nghĩa đúng'],writeS:['✍️','Viết','Sắp xếp từ thành câu · viết câu ra giấy']};
+let SK=store.get('skills',{});
+function skills(){
+  st.innerHTML=`<div class="q">Nghe · Nói · Đọc · Viết</div><p class="lbl">Mỗi bài 10 câu, dùng ${SENT.length} câu mẫu HSK 1 và từ của nhóm đang chọn. Đúng từ 80% trở lên là qua (+40 điểm).</p>
+  <div class="tower">${Object.entries(SKILLS).map(([k,s])=>`<button class="floor" data-k="${k}"><span class="n">${s[0]}</span><span><span class="t">${s[1]}</span><br><span class="s">${s[2]}</span></span><span class="small">${SK[k]!=null?'Cao nhất '+SK[k]+'%':''}</span></button>`).join('')}</div>`;
+  keyH=null;st.querySelectorAll('.floor').forEach(b=>b.onclick=()=>skillRun(b.dataset.k))}
+function skillRun(k){const w=shuf(words()),ss=shuf(SENT),R={i:0,ok:0,wrong:[]};
+  const next=()=>{if(R.i>=10)return fin();const i=R.i,head=`<div class="prog"><i style="width:${i*10}%"></i></div><div class="meta"><span>${SKILLS[k][1]} · câu ${i+1}/10</span><span>Đúng ${R.ok}</span></div>`;
+    const s=ss[i%ss.length],wd=w.length?w[i%w.length]:null,nx=()=>{R.i++;next()};
+    const on=item=>ok=>{if(ok)R.ok++;else R.wrong.push(item)};
+    if(k==='listen'){if(i%2===0||!wd)sentMcq(s,head,on(s),nx,true);else listenType(wd,head,on(wd),nx)}
+    else if(k==='speak'){const it=(i%2===0||!wd)?s:wd;speakQ(it,head,on(it),nx)}
+    else if(k==='read')sentMcq(s,head,on(s),nx,false);
+    else{if(i%3===2)paperSent(s,head,on(s),nx);else orderQ(s,head,on(s),nx)}};
+  const fin=()=>{const pct=R.ok*10;if(SK[k]==null||pct>SK[k]){SK[k]=pct;store.set('skills',SK)}gain(pct>=80?40:0);
+    st.innerHTML=`<div class="lbl">${SKILLS[k][1]}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':'var(--red)'}">${pct}%</div><p>Đúng ${R.ok}/10.</p>
+    <div class="bar"><button class="btn pri" id="ag">Làm lại</button><button class="btn" id="bk">Chọn kỹ năng khác</button></div>
+    ${R.wrong.length?`<ul class="res">${R.wrong.map(x=>`<li><span class="hz">${esc(x.h)}</span><span><span style="color:var(--red)">${esc(x.p)}</span> · ${esc(x.v)}</span></li>`).join('')}</ul>`:''}`;
+    keyH=null;$('ag').onclick=()=>skillRun(k);$('bk').onclick=skills};
+  next()}
+/* Nghe/Đọc câu: chọn nghĩa */
+function sentMcq(s,head,onAns,onNext,audio){const opts=shuf([s,...shuf(SENT.filter(x=>x.id!==s.id)).slice(0,3)]);
+  st.innerHTML=`${head}<div class="lbl">${audio?'Nghe câu rồi chọn nghĩa đúng (Space: nghe lại)':'Đọc câu rồi chọn nghĩa đúng'}</div>
+  ${audio?`<div class="spk"><button id="pl" aria-label="Nghe lại">🔊</button></div>`:`<div class="q"><span class="hz" style="font-size:clamp(28px,6vw,44px)">${esc(s.h)}</span><span class="lbl hide" id="pyh" style="display:block;font-weight:400">${esc(s.p)}</span></div><div class="bar" style="margin-bottom:12px"><button class="btn" id="hint">Gợi ý pinyin</button><button class="btn" id="pl">🔊 Nghe</button></div>`}
+  <div class="opts">${opts.map((o,k)=>`<button class="opt" data-id="${o.id}"><kbd>${k+1}</kbd>${esc(o.v)}</button>`).join('')}</div>${TAIL}`;
+  $('pl').onclick=()=>say(s.h);if(audio)setTimeout(()=>say(s.h),250);if($('hint'))$('hint').onclick=()=>$('pyh').classList.remove('hide');
+  let done=false;const pick=b=>{if(done)return;done=true;const ok=+b.dataset.id===s.id;b.classList.add(ok?'ok':'no');st.querySelector(`.opt[data-id="${s.id}"]`).classList.add('ok');if(!audio)say(s.h);gain(ok?12:0);fbShow(ok,s,onAns,onNext)};
+  st.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b));
+  keyH=e=>{if(!done&&/^[1-4]$/.test(e.key))pick(st.querySelectorAll('.opt')[e.key-1]);else if(!done&&audio&&e.key===' '){e.preventDefault();say(s.h)}else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+/* Nghe từ: chính tả pinyin */
+function listenType(w,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Nghe rồi gõ pinyin (có hoặc không dấu thanh)</div><div class="spk"><button id="pl" type="button" aria-label="Nghe lại">🔊</button></div>
+  <form class="typ" id="tf"><input id="ti" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Pinyin"><button class="btn pri">Kiểm tra</button><button type="button" class="btn" id="idk">Không biết</button></form>${TAIL}`;
+  $('pl').onclick=()=>{say(w.h);$('ti').focus()};setTimeout(()=>say(w.h),250);$('ti').focus();let done=false;
+  const fin=r=>{if(done)return;done=true;$('ti').disabled=true;gain(r?15:0);fbShow(r>0,w,onAns,onNext,r===2?'Chính xác!':r===1?'Đúng, nhưng thiếu/sai dấu thanh':'Chưa đúng')};
+  $('tf').onsubmit=e=>{e.preventDefault();if(done)return onNext();const v=$('ti').value;if(!v.trim())return;fin(checkPy(v,w))};
+  $('idk').onclick=()=>fin(0);
+  keyH=e=>{if(done&&e.key==='Enter'&&e.target.tagName!=='INPUT'){e.preventDefault();onNext()}}}
+/* Nói: nhận giọng nói zh-CN nếu trình duyệt hỗ trợ, nếu không thì tự chấm */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function speakQ(x,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Đọc to câu/từ này bằng tiếng Trung</div><div class="q"><span class="hz" style="font-size:clamp(30px,7vw,52px)">${esc(x.h)}</span>${esc(x.v)}<span class="lbl hide" id="pyh" style="display:block;font-weight:400">${esc(x.p)}</span></div>
+  <div class="bar">${SR?'<button class="btn pri" id="mic">🎤 Bấm rồi nói</button>':''}<button class="btn" id="hint">Gợi ý pinyin</button><button class="btn" id="pl">🔊 Nghe mẫu</button><button class="btn" id="self">Tự chấm</button></div>
+  <p class="small" id="heard" style="margin-top:10px">${SR?'':'Trình duyệt này không có nhận giọng nói. Đọc to, nghe mẫu rồi tự chấm.'}</p>
+  <div class="bar hide" id="sg" style="margin-top:8px"><button class="btn" id="g1">✓ Nói được</button><button class="btn" id="g0">✗ Chưa được</button></div>${TAIL}`;
+  let done=false;const end=(ok,t)=>{if(done)return;done=true;$('sg').classList.add('hide');if($('mic'))$('mic').disabled=true;gain(ok?12:0);fbShow(ok,x,onAns,onNext,t)};
+  $('pl').onclick=()=>say(x.h);$('hint').onclick=()=>$('pyh').classList.remove('hide');
+  $('self').onclick=()=>{say(x.h);$('sg').classList.remove('hide')};
+  $('g1').onclick=()=>end(true,'Tự chấm: nói được');$('g0').onclick=()=>end(false,'Tự chấm: chưa được');
+  if(SR)$('mic').onclick=()=>{let r;try{r=new SR()}catch(e){$('heard').textContent='Không bật được micro. Bấm "Tự chấm".';return}
+    r.lang='zh-CN';r.interimResults=false;r.maxAlternatives=5;$('mic').textContent='🎤 Đang nghe…';$('mic').disabled=true;
+    r.onresult=e=>{const tgt=plain(x.h);let best=0,bt='';[...e.results[0]].forEach(a=>{const sc=sim(plain(dg(a.transcript)),tgt);if(sc>=best){best=sc;bt=a.transcript}});
+      $('heard').textContent=`Máy nghe được: ${bt} (khớp ${Math.round(best*100)}%)`;
+      if(best>=.8)end(true,'Phát âm tốt!');else{$('sg').classList.remove('hide');$('heard').textContent+=' · Nói lại, hoặc tự chấm nếu bạn thấy mình đúng.'}};
+    r.onerror=e=>{$('heard').textContent=(e.error==='not-allowed'||e.error==='service-not-allowed')?'Micro bị chặn trong trang này. Đọc to rồi bấm "Tự chấm".':'Không nghe rõ ('+e.error+'). Thử lại.'};
+    r.onend=()=>{if(!done&&$('mic')){$('mic').disabled=false;$('mic').textContent='🎤 Bấm rồi nói'}};
+    try{r.start()}catch(e){$('heard').textContent='Không bật được micro. Bấm "Tự chấm".'}};
+  keyH=e=>{if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+/* Viết: sắp xếp từ thành câu */
+function orderQ(s,head,onAns,onNext){let pool=shuf(s.t.map((t,i)=>({t,i})));if(s.t.length>1&&pool.every((p,k)=>p.i===k))pool.reverse();const pick=[];let done=false;
+  const check=()=>{if(done||pool.length)return;done=true;const ok=pick.map(p=>p.t).join('')===s.h;
+    st.querySelectorAll('.chip').forEach(c=>c.disabled=true);$('chk').disabled=true;$('clr').disabled=true;say(s.h);gain(ok?15:0);fbShow(ok,s,onAns,onNext)};
+  const draw=()=>{st.innerHTML=`${head}<div class="lbl">Sắp xếp thành câu đúng</div><div class="q">${esc(s.v)}</div>
+    <div class="ord">${pick.length?pick.map((p,k)=>`<button class="chip on" data-k="${k}">${esc(p.t)}</button>`).join(''):'<span class="small">Bấm các ô bên dưới theo đúng thứ tự. Bấm ô đã chọn để bỏ.</span>'}</div>
+    <div class="ord pool">${pool.map((p,k)=>`<button class="chip" data-p="${k}">${esc(p.t)}</button>`).join('')}</div>
+    <div class="bar" style="margin-top:12px"><button class="btn pri" id="chk" ${pool.length?'disabled':''}>Kiểm tra (Enter)</button><button class="btn" id="clr">Xóa</button></div>${TAIL}`;
+    st.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{pick.push(pool.splice(+b.dataset.p,1)[0]);draw()});
+    st.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{pool.push(pick.splice(+b.dataset.k,1)[0]);draw()});
+    $('clr').onclick=()=>{pool.push(...pick.splice(0));draw()};$('chk').onclick=check;if(!pool.length)$('chk').focus()};
+  draw();
+  keyH=e=>{if(e.key!=='Enter')return;e.preventDefault();if(done)onNext();else check()}}
+/* Viết: viết câu ra giấy rồi tự chấm */
+function paperSent(s,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Viết câu này bằng chữ Hán ra giấy, xong bấm xem đáp án</div><div class="q">${esc(s.v)}</div>
+  <div class="bar"><button class="btn pri" id="rv">Xem đáp án</button></div>
+  <div class="bar hide" id="sg" style="margin-top:12px"><span class="hz" style="font-size:clamp(26px,5vw,40px);flex-basis:100%">${esc(s.h)}</span><span class="small" style="flex-basis:100%">${esc(s.p)}</span><button class="btn" id="g1">✓ Viết đúng</button><button class="btn" id="g0">✗ Sai chữ</button></div>${TAIL}`;
+  let done=false;const end=ok=>{if(done)return;done=true;$('sg').classList.add('hide');gain(ok?15:0);fbShow(ok,s,onAns,onNext)};
+  $('rv').onclick=()=>{$('rv').classList.add('hide');$('sg').classList.remove('hide');say(s.h)};
+  $('g1').onclick=()=>end(true);$('g0').onclick=()=>end(false);
+  keyH=e=>{if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+
 /* ---------- điều hướng ---------- */
-const MODES={tower,paper,cards,learn,write,test,match,exam};
-const NOTES={paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Mỗi từ qua 2 bước: chọn nghĩa, rồi gõ pinyin. Trả lời sai thì từ đó quay lại từ đầu. Mỗi vòng 7 từ.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+const MODES={tower,skills,paper,cards,learn,write,test,match,exam};
+const NOTES={skills:'Nói: dùng Chrome hoặc Edge và cho phép micro để máy chấm; nếu micro bị chặn thì nghe mẫu rồi tự chấm. Viết: bấm các ô theo thứ tự để ghép câu.',paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Học theo bài 20 từ. Trả lời sai thì từ đó quay lại bước 1. Bấm 💾 Lưu bài để chốt ngày học và quay về danh sách bài.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
 function go(m,re){mode=m;clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
   $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
