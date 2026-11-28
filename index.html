@@ -100,7 +100,9 @@ select{font-size:16px;max-width:100%}
 .ord{display:flex;flex-wrap:wrap;gap:8px;min-height:60px;padding:10px;border-radius:12px;border:1.5px dashed var(--line);margin-bottom:10px;align-items:center}.ord.pool{border:0;padding:0}
 .chip{font-family:"Noto Serif SC",serif;font-size:22px;min-height:48px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer}.chip.on{border-color:var(--red)}
 .btn:disabled,.chip:disabled{opacity:.55;cursor:not-allowed}
-.spk{display:flex;justify-content:center;margin:6px 0 16px}.spk button{width:96px;height:96px;border-radius:50%;font-size:40px;border:2px solid var(--red);background:var(--bg);cursor:pointer}
+.spk{display:flex;justify-content:center;margin:6px 0 16px}
+.form{display:grid;gap:6px;max-width:360px}.form input{font-size:16px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:16px 0 6px}.dd{border:1px solid var(--line);border-radius:10px;padding:6px 0;text-align:center;font-size:13px;display:flex;flex-direction:column}.dd.on{background:var(--okbg);border-color:var(--ok)}.dd.td{outline:2px solid var(--red);outline-offset:1px}.spk button{width:96px;height:96px;border-radius:50%;font-size:40px;border:2px solid var(--red);background:var(--bg);cursor:pointer}
 @media(max-width:600px){.opts{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:84px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -117,8 +119,10 @@ select{font-size:16px;max-width:100%}
 <div class="cult" id="cult"></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="tabs" role="tablist">
-  <button role="tab" data-m="tower" aria-selected="true">Vượt màn</button>
+  <button role="tab" data-m="plan" aria-selected="true">Lộ trình</button>
+  <button role="tab" data-m="tower" aria-selected="false">Vượt màn</button>
   <button role="tab" data-m="skills" aria-selected="false">Nghe Nói Đọc Viết</button>
+  <button role="tab" data-m="hskk" aria-selected="false">Luyện nói HSKK</button>
   <button role="tab" data-m="cards" aria-selected="false">Thẻ ghi nhớ</button>
   <button role="tab" data-m="paper" aria-selected="false">Viết ra giấy</button>
   <button role="tab" data-m="learn" aria-selected="false">Học</button>
@@ -170,7 +174,7 @@ function cult(){const r=realmOf(XP),today=dayN(),alive=STK.d===today||STK.d===to
   $('cult').innerHTML=`<span class="realm">${r.name}</span><div class="xpbar" title="${XP} điểm"><i style="width:${(r.f*100).toFixed(1)}%"></i></div><span class="xpn">${XP} / ${r.hi} điểm</span><span class="fire" title="Chuỗi ngày học liên tục">🔥 ${alive?STK.n:0} ngày</span>`}
 function touchStreak(){const today=dayN();if(STK.d!==today){STK={d:today,n:STK.d===today-1?STK.n+1:1};store.set('streak',STK);if(STK.n>1)toast(`🔥 Chuỗi ${STK.n} ngày liên tục!`)}cult()}
 let toastT=0;function toast(m){$('toast').textContent=m;$('toast').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toast').classList.remove('on'),2600)}
-function gain(n){if(!n)return;const before=realmOf(XP);XP+=n;store.set('xp',XP);
+function gain(n){if(!n)return;const before=realmOf(XP);XP+=n;store.set('xp',XP);mark('xp',n);
   touchStreak();
   const after=realmOf(XP);if(after.i>before.i)toast(`🎉 Lên ${after.name}!`);cult()}
 
@@ -222,7 +226,7 @@ function exam(){clearInterval(examT);const w=words();if(w.length<8)return empty(
       if(E.i<10){k===1||k===3?listenQ(q,head,on,nx,true):listenQ(q,head,on,nx)}
       else{k<2?mcq(q,head,on,nx):k<4?mcq(q,head,on,nx,true):tf(q,head,on,nx)}
       const s=secs();if($('etm'))$('etm').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
-    const fin=()=>{clearInterval(examT);const sc=E.ok*10,pass=sc>=120,b=store.get('exam-best',0);if(sc>b)store.set('exam-best',sc);gain(Math.round(sc/4));
+    const fin=()=>{clearInterval(examT);mark('review');const sc=E.ok*10,pass=sc>=120,b=store.get('exam-best',0);if(sc>b)store.set('exam-best',sc);gain(Math.round(sc/4));
       st.innerHTML=`<div class="lbl">Kết quả thi thử</div><div class="big" style="color:${pass?'var(--ok)':'var(--red)'}">${sc}/200</div><p><b>${pass?'ĐẠT':'CHƯA ĐẠT'}</b> (cần 120). Đúng ${E.ok}/20 câu.${sc>b?' Điểm cao nhất mới!':''}</p>
       <div class="bar"><button class="btn pri" id="ag">Thi lại</button></div>${E.wrong.length?`<ul class="res">${E.wrong.map(w=>`<li><span class="hz">${esc(w.h)}</span><span><span style="color:var(--red)">${esc(w.p)}</span> · ${esc(w.v)}</span></li>`).join('')}</ul>`:''}`;
       keyH=null;$('ag').onclick=exam};
@@ -282,7 +286,7 @@ function saveLesson(fin){const i=L.lesson,n=nKnown(L.lv);LS.prog[i]={...L.lv};if
   LS.log.push({t:Date.now(),l:i,n});LS.log=LS.log.slice(-90);store.set('lessons',LS);touchStreak();return n}
 function nextLearn(){const ids=Object.keys(L.lv).map(Number),left=ids.filter(i=>L.lv[i]<2);
   const done=ids.length-left.length;
-  if(L.lesson!=null){LS.prog[L.lesson]={...L.lv};store.set('lessons',LS)}
+  if(L.lesson!=null){LS.prog[L.lesson]={...L.lv};store.set('lessons',LS);mark('lesson')}
   if(!left.length&&L.lesson!=null){const i=L.lesson;saveLesson(true);gain(50);
     st.innerHTML=`<div class="big">Xong Bài ${i+1}!</div><p>Đã thuộc cả ${ids.length} từ. Đã lưu bài, +50 điểm.</p><div class="bar">${i+1<LESS.length?`<button class="btn pri" id="nxl">Bài ${i+2} →</button>`:''}<button class="btn" id="bkl">Danh sách bài</button><button class="btn" id="again">Học lại bài này</button></div>`;
     if($('nxl'))$('nxl').onclick=()=>startLesson(i+1);$('bkl').onclick=learn;$('again').onclick=()=>startLesson(i);keyH=null;return}
@@ -349,7 +353,7 @@ function tf(w,head,onAns,onNext){const real=Math.random()<.5,o=real?w:distract(w
     $('go').classList.remove('hide');$('cont').focus();$('cont').onclick=onNext};
   st.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b));
   keyH=e=>{if(!done&&(e.key==='1'||e.key==='2'))pick(st.querySelectorAll('.opt')[e.key-1]);else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
-function result(name,ok,n,wrong,again){const pct=Math.round(ok/n*100);
+function result(name,ok,n,wrong,again){mark('review');const pct=Math.round(ok/n*100);
   st.innerHTML=`<div class="lbl">${esc(name)}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':pct>=50?'inherit':'var(--red)'}">${pct}%</div><p>Đúng ${ok}/${n} câu.</p>
   <div class="bar"><button class="btn pri" id="ag">Làm lại</button>${wrong.length?`<button class="btn" id="stw">★ Gắn sao ${wrong.length} từ sai</button>`:''}</div>
   ${wrong.length?`<ul class="res">${wrong.map(w=>`<li><span class="hz">${esc(w.h)}</span><span><span style="color:var(--red)">${esc(w.p)}</span> · ${esc(w.v)}</span></li>`).join('')}</ul>`:''}`;
@@ -462,7 +466,7 @@ function skillRun(k){const w=shuf(words()),ss=shuf(SENT),R={i:0,ok:0,wrong:[]};
     else if(k==='speak'){const it=(i%2===0||!wd)?s:wd;speakQ(it,head,on(it),nx)}
     else if(k==='read')sentMcq(s,head,on(s),nx,false);
     else{const it=(i%4===1&&wd)?wd:s;if(i%2===0)orderQ(s,head,on(s),nx);else transQ(it,head,on(it),nx)}};
-  const fin=()=>{const pct=R.ok*10;if(SK[k]==null||pct>SK[k]){SK[k]=pct;store.set('skills',SK)}gain(pct>=80?40:0);
+  const fin=()=>{const pct=R.ok*10;if(SK[k]==null||pct>SK[k]){SK[k]=pct;store.set('skills',SK)}mark('skills');gain(pct>=80?40:0);
     st.innerHTML=`<div class="lbl">${SKILLS[k][1]}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':'var(--red)'}">${pct}%</div><p>Đúng ${R.ok}/10.</p>
     <div class="bar"><button class="btn pri" id="ag">Làm lại</button><button class="btn" id="bk">Chọn kỹ năng khác</button></div>
     ${R.wrong.length?`<ul class="res">${R.wrong.map(x=>`<li><span class="hz">${esc(x.h)}</span><span><span style="color:var(--red)">${esc(x.p)}</span> · ${esc(x.v)}</span></li>`).join('')}</ul>`:''}`;
@@ -537,16 +541,138 @@ function transQ(x,head,onAns,onNext){
   keyH=e=>{if(done&&e.key==='Enter'&&e.target.tagName!=='INPUT'){e.preventDefault();onNext()}}}
 
 
+/* ---------- NHẬT KÝ NGÀY + LỘ TRÌNH ---------- */
+function dayLog(){return store.get('log-'+dayN(),{xp:0})}
+function mark(key,n){const k='log-'+dayN(),g=store.get(k,{xp:0});if(key==='xp')g.xp=(g.xp||0)+n;else g[key]=true;store.set(k,g)}
+let PL=store.get('plan',null);
+function plan(){if(!PL)return planSetup();gram(null);const today=dayN(),lg=dayLog(),left=LESS.length-LS.done.length,
+  dl=PL.exam!=null?Math.max(0,PL.exam-today):null,wk=dl?Math.ceil(left/Math.max(1,dl/7)):null,
+  sk=['listen','speak','read','writeS'][today%4],cur=LESS.findIndex((_,i)=>!LS.done.includes(i));
+  const items=[
+    {k:'lesson',t:cur>=0?`Học từ mới: Bài ${cur+1}`:'Ôn lại các bài đã học',s:`${LSZ} từ, xong bấm 💾 Lưu bài`,go:()=>{go('learn');if(cur>=0)startLesson(cur)}},
+    {k:'skills',t:`Kỹ năng hôm nay: ${SKILLS[sk][1]}`,s:'10 câu trong tab Nghe Nói Đọc Viết',go:()=>{go('skills');skillRun(sk)}},
+    PL.min>=30&&{k:'hskk',t:'Luyện nói HSKK',s:'Một phần bất kỳ trong tab Luyện nói HSKK',go:()=>go('hskk')},
+    PL.min>=45&&{k:'review',t:'Ôn tập: làm một bài Kiểm tra',s:'Bật ★ Chỉ từ gắn sao để ôn từ hay sai',go:()=>go('test')}].filter(Boolean);
+  const nd=items.filter(i=>lg[i.k]).length,days=[...Array(7)].map((_,j)=>{const d=today-6+j;return{d,l:store.get('log-'+d,null)}});
+  st.innerHTML=`<div class="q">Lộ trình hôm nay</div>
+  <p class="lbl">${nd===items.length?'🎉 Xong hết việc hôm nay!':`Đã xong ${nd}/${items.length} việc · khoảng ${PL.min} phút`}${dl!=null?` · còn ${dl} ngày đến ngày thi, ${left} bài chưa học (cần khoảng ${wk} bài/tuần)`:` · còn ${left}/${LESS.length} bài chưa học`}</p>
+  <div class="prog"><i style="width:${nd/items.length*100}%"></i></div>
+  <div class="tower">${items.map((it,j)=>`<button class="floor" data-j="${j}"><span class="n">${lg[it.k]?'✓':j+1}</span><span><span class="t">${esc(it.t)}</span><br><span class="s">${esc(it.s)}</span></span><span class="small">${lg[it.k]?'Xong':'Làm ngay →'}</span></button>`).join('')}</div>
+  <div class="week">${days.map(({d,l})=>`<div class="dd ${l&&l.xp?'on':''} ${d===today?'td':''}"><b>${['CN','T2','T3','T4','T5','T6','T7'][new Date(d*864e5).getUTCDay()]}</b><span>${l&&l.xp?l.xp:'·'}</span></div>`).join('')}</div>
+  <p class="small">7 ngày gần nhất, số là điểm kiếm được trong ngày.</p>
+  <div class="bar"><button class="btn" id="pe">Sửa lộ trình</button></div>`;
+  keyH=null;st.querySelectorAll('.floor').forEach(b=>b.onclick=()=>items[+b.dataset.j].go());$('pe').onclick=planSetup}
+function planSetup(){gram(null);const p=PL||{min:30,exam:null},ex=p.exam!=null?new Date(p.exam*864e5).toISOString().slice(0,10):'';
+  st.innerHTML=`<div class="q">Tạo lộ trình học</div><p class="lbl">Chọn thời gian học mỗi ngày và ngày thi dự kiến. App chia việc mỗi ngày và tự đánh dấu việc bạn đã làm.</p>
+  <div class="form"><label class="lbl" for="pm">Mỗi ngày học</label><select id="pm">${[15,30,45,60].map(m=>`<option value="${m}" ${m===p.min?'selected':''}>${m} phút</option>`).join('')}</select>
+  <label class="lbl" for="px">Ngày thi HSK 1 dự kiến (không bắt buộc)</label><input type="date" id="px" value="${ex}"></div>
+  <p class="small">15 phút: từ mới + 1 kỹ năng · 30 phút: thêm luyện nói HSKK · 45–60 phút: thêm bài ôn tập.</p>
+  <div class="bar" style="margin-top:10px"><button class="btn pri" id="ps">Lưu lộ trình</button>${PL?'<button class="btn" id="pc">Hủy</button>':''}</div>`;
+  keyH=null;$('ps').onclick=()=>{const v=$('px').value;PL={min:+$('pm').value,exam:v?Math.floor(Date.parse(v)/864e5):null};store.set('plan',PL);plan()};if($('pc'))$('pc').onclick=plan}
+
+/* ---------- LUYỆN NÓI HSKK SƠ CẤP ---------- */
+const QA=[["你叫什么名字？","nǐ jiào shénme míngzi?","Bạn tên là gì?","我叫陈清义。","wǒ jiào Chén Qīngyì.","我叫|名字"],
+["你是哪国人？","nǐ shì nǎ guó rén?","Bạn là người nước nào?","我是越南人。","wǒ shì Yuènán rén.","是.*人"],
+["你家在哪儿？","nǐ jiā zài nǎr?","Nhà bạn ở đâu?","我家在岘港。","wǒ jiā zài Xiàngǎng.","在"],
+["你做什么工作？","nǐ zuò shénme gōngzuò?","Bạn làm công việc gì?","我是工程师，我在公司工作。","wǒ shì gōngchéngshī, wǒ zài gōngsī gōngzuò.","我是|工作"],
+["你每天几点起床？","nǐ měitiān jǐ diǎn qǐchuáng?","Mỗi ngày bạn dậy lúc mấy giờ?","我每天早上六点半起床。","wǒ měitiān zǎoshang liù diǎn bàn qǐchuáng.","点"],
+["你喜欢做什么？","nǐ xǐhuan zuò shénme?","Bạn thích làm gì?","我喜欢听音乐，也喜欢看电影。","wǒ xǐhuan tīng yīnyuè, yě xǐhuan kàn diànyǐng.","喜欢"],
+["你会说汉语吗？","nǐ huì shuō Hànyǔ ma?","Bạn biết nói tiếng Hán không?","我会说一点儿汉语。","wǒ huì shuō yìdiǎnr Hànyǔ.","会"],
+["你今天忙吗？","nǐ jīntiān máng ma?","Hôm nay bạn bận không?","我今天很忙。","wǒ jīntiān hěn máng.","忙"],
+["你怎么去公司？","nǐ zěnme qù gōngsī?","Bạn đến công ty bằng gì?","我骑摩托车去公司。","wǒ qí mótuōchē qù gōngsī.","坐|骑|走"],
+["你喝茶还是喝咖啡？","nǐ hē chá háishi hē kāfēi?","Bạn uống trà hay cà phê?","我喝咖啡。","wǒ hē kāfēi.","喝"],
+["周末你常常做什么？","zhōumò nǐ chángcháng zuò shénme?","Cuối tuần bạn thường làm gì?","周末我常常和朋友去喝咖啡。","zhōumò wǒ chángcháng hé péngyou qù hē kāfēi.","我"],
+["现在几点？","xiànzài jǐ diǎn?","Bây giờ mấy giờ?","现在九点十分。","xiànzài jiǔ diǎn shí fēn.","点"],
+["你的手机号码是多少？","nǐ de shǒujī hàomǎ shì duōshao?","Số điện thoại của bạn là bao nhiêu?","我的手机号码是零九零五一二三四五六。","wǒ de shǒujī hàomǎ shì líng jiǔ líng wǔ yī èr sān sì wǔ liù.","号码|是"],
+["你明天有空儿吗？","nǐ míngtiān yǒu kòngr ma?","Ngày mai bạn rảnh không?","我明天有空儿。","wǒ míngtiān yǒu kòngr.","空"],
+["这个多少钱？","zhège duōshao qián?","Cái này bao nhiêu tiền?","这个二十块。","zhège èrshí kuài.","块|钱"]].map(r=>({h:r[0],p:r[1],v:r[2],a:r[3],ap:r[4],k:new RegExp(r[5])}));
+const TOP=[{h:'请介绍一下你自己。',p:'qǐng jièshào yíxiàr nǐ zìjǐ',v:'Hãy giới thiệu về bản thân.',hints:[['我叫……','tên'],['我是越南人，住在……','quốc tịch, nơi ở'],['我在……工作 / 我是……','công việc'],['我喜欢……','sở thích'],['认识你们很高兴！','câu kết']],
+  a:'大家好！我叫陈清义，我是越南人。我住在岘港，在一家公司工作。我喜欢听音乐和弹吉他。认识你们很高兴！',ap:'dàjiā hǎo! wǒ jiào Chén Qīngyì, wǒ shì Yuènán rén. wǒ zhù zài Xiàngǎng, zài yì jiā gōngsī gōngzuò. wǒ xǐhuan tīng yīnyuè hé tán jítā. rènshi nǐmen hěn gāoxìng!'},
+ {h:'请说说你的一天。',p:'qǐng shuōshuo nǐ de yì tiān',v:'Hãy kể về một ngày của bạn.',hints:[['我每天早上……点起床','buổi sáng'],['……点去上班','đi làm'],['中午……','buổi trưa'],['下午……点下班','tan làm'],['晚上我常常……，……点睡觉','buổi tối']],
+  a:'我每天早上六点半起床，七点吃早饭，八点去上班。中午十二点吃午饭。下午五点下班。晚上我常常看书，十一点睡觉。',ap:'wǒ měitiān zǎoshang liù diǎn bàn qǐchuáng, qī diǎn chī zǎofàn, bā diǎn qù shàngbān. zhōngwǔ shí\'èr diǎn chī wǔfàn. xiàwǔ wǔ diǎn xiàbān. wǎnshang wǒ chángcháng kàn shū, shíyī diǎn shuìjiào.'},
+ {h:'你的爱好是什么？',p:'nǐ de àihào shì shénme?',v:'Sở thích của bạn là gì?',hints:[['我的爱好是……','sở thích chính'],['周末我常常……','khi nào làm'],['和……一起','làm cùng ai'],['我也喜欢……','sở thích khác']],
+  a:'我的爱好是听音乐和看电影。周末我常常和朋友一起去电影院看电影。我也喜欢弹吉他。',ap:'wǒ de àihào shì tīng yīnyuè hé kàn diànyǐng. zhōumò wǒ chángcháng hé péngyou yìqǐ qù diànyǐngyuàn kàn diànyǐng. wǒ yě xǐhuan tán jítā.'},
+ {h:'你的工作怎么样？',p:'nǐ de gōngzuò zěnmeyàng?',v:'Công việc của bạn thế nào?',hints:[['我是……，在……工作','nghề, nơi làm'],['我的工作很……','nhận xét'],['我每天……点上班，……点下班','giờ làm'],['我的同事……','đồng nghiệp']],
+  a:'我是工程师，在一家公司工作。我的工作很忙，也有一点儿累，但是我很喜欢。我的同事都很好。',ap:'wǒ shì gōngchéngshī, zài yì jiā gōngsī gōngzuò. wǒ de gōngzuò hěn máng, yě yǒu yìdiǎnr lèi, dànshì wǒ hěn xǐhuan. wǒ de tóngshì dōu hěn hǎo.'}];
+const micMsg=er=>(er==='not-allowed'||er==='service-not-allowed')?'Micro bị chặn ở trang này. Mở app bằng link GitHub trên Chrome/Edge để máy chấm, hoặc bấm "Tự chấm".':'Không nghe rõ ('+er+'). Thử lại.';
+function rec(cont,onTxt,onErr,onEnd){if(!SR)return null;let r;try{r=new SR()}catch(e){onErr('not-allowed');return null}
+  r.lang='zh-CN';r.continuous=cont;r.interimResults=cont;r.maxAlternatives=cont?1:5;r.onresult=onTxt;r.onerror=e=>onErr(e.error);r.onend=onEnd;
+  try{r.start()}catch(e){onErr('not-allowed');return null}return r}
+function hskk(){gram(null);const b=store.get('hskk',{});
+  st.innerHTML=`<div class="q">Luyện nói HSKK sơ cấp</div><p class="lbl">Ba phần theo dạng bài thi HSKK sơ cấp. Máy chấm cần micro: mở app bằng link GitHub trên Chrome hoặc Edge. Không có micro thì nghe mẫu rồi tự chấm.</p>
+  <div class="tower">${[['p1','1','Nghe và nhắc lại','10 câu ngắn, không hiện chữ'],['p2','2','Nghe câu hỏi và trả lời','10 câu hỏi đời thường, trả lời ngắn'],['p3','3','Nói theo chủ đề','Nói 90 giây về một chủ đề, có gợi ý và bài mẫu']].map(([k,n,t,s])=>`<button class="floor" data-k="${k}"><span class="n">${n}</span><span><span class="t">${t}</span><br><span class="s">${s}</span></span><span class="small">${b[k]!=null?'Cao nhất '+b[k]+'%':''}</span></button>`).join('')}</div>`;
+  keyH=null;st.querySelectorAll('.floor').forEach(x=>x.onclick=()=>x.dataset.k==='p3'?topicMenu():hRun(x.dataset.k))}
+function hRun(k){const pool=k==='p1'?shuf(SENT.filter(s=>s.t.length<=5)):shuf(QA),R={i:0,ok:0,wrong:[]},N=10,pn=k==='p1'?1:2;
+  const next=()=>{if(R.i>=N)return fin();const x=pool[R.i%pool.length],head=`<div class="prog"><i style="width:${R.i*10}%"></i></div><div class="meta"><span>HSKK phần ${pn} · câu ${R.i+1}/${N}</span><span>Đạt ${R.ok}</span></div>`;
+    const on=ok=>{if(ok)R.ok++;else R.wrong.push(x)},nx=()=>{R.i++;next()};k==='p1'?hRepeat(x,head,on,nx):hAnswer(x,head,on,nx)};
+  const fin=()=>{const pct=R.ok*10,b=store.get('hskk',{});if(b[k]==null||pct>b[k]){b[k]=pct;store.set('hskk',b)}mark('hskk');gain(pct>=80?40:0);
+    st.innerHTML=`<div class="lbl">HSKK phần ${pn}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':'var(--red)'}">${pct}%</div><p>Đạt ${R.ok}/${N} câu.</p><div class="bar"><button class="btn pri" id="ag">Làm lại</button><button class="btn" id="bk">Chọn phần khác</button></div>
+    ${R.wrong.length?`<ul class="res">${R.wrong.map(x=>`<li><span class="hz">${esc(x.h)}</span><span><span style="color:var(--red)">${esc(x.p)}</span> · ${esc(x.v)}</span></li>`).join('')}</ul>`:''}`;
+    keyH=null;$('ag').onclick=()=>hRun(k);$('bk').onclick=hskk};
+  next()}
+function hRepeat(x,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Nghe rồi nhắc lại (Space: nghe lại)</div><div class="spk"><button id="pl" aria-label="Nghe lại">🔊</button></div>
+  <div class="bar" style="justify-content:center">${SR?'<button class="btn pri" id="mic">🎤 Nhắc lại</button>':''}<button class="btn" id="shw">Hiện chữ</button><button class="btn" id="self">Tự chấm</button></div>
+  <p class="small" id="heard" style="text-align:center;margin-top:10px">${SR?'':'Không có nhận giọng nói ở đây: nhắc lại thật to rồi tự chấm.'}</p><p class="hz hide" id="txt" style="text-align:center;font-size:30px;margin:6px 0">${esc(x.h)}</p>
+  <div class="bar hide" id="sg" style="justify-content:center;margin-top:8px"><button class="btn" id="g1">✓ Nói được</button><button class="btn" id="g0">✗ Chưa được</button></div>${TAIL}`;
+  setTimeout(()=>say(x.h),250);gram(null);
+  let done=false;const end=(ok,t)=>{if(done)return;done=true;$('sg').classList.add('hide');$('txt').classList.remove('hide');if($('mic'))$('mic').disabled=true;gain(ok?12:0);fbShow(ok,x,onAns,onNext,t)};
+  $('pl').onclick=()=>say(x.h);$('shw').onclick=()=>$('txt').classList.remove('hide');$('self').onclick=()=>{say(x.h);$('sg').classList.remove('hide')};
+  $('g1').onclick=()=>end(true,'Tự chấm: nói được');$('g0').onclick=()=>end(false,'Tự chấm: chưa được');
+  if(SR)$('mic').onclick=()=>{$('mic').disabled=true;$('mic').textContent='🎤 Đang nghe…';
+    rec(false,e=>{const tgt=plain(x.h);let best=0,bt='';[...e.results[0]].forEach(a=>{const sc=sim(plain(dg(a.transcript)),tgt);if(sc>=best){best=sc;bt=a.transcript}});
+      $('heard').textContent=`Máy nghe được: ${bt} (khớp ${Math.round(best*100)}%)`;if(best>=.8)end(true,'Nhắc lại tốt!');else{$('heard').textContent+=' · Nghe lại rồi nhắc lại, hoặc tự chấm.';$('sg').classList.remove('hide')}},
+      er=>{$('heard').textContent=micMsg(er)},()=>{if(!done&&$('mic')){$('mic').disabled=false;$('mic').textContent='🎤 Nhắc lại'}})};
+  keyH=e=>{if(!done&&e.key===' '){e.preventDefault();say(x.h)}else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+function hAnswer(x,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Nghe câu hỏi rồi trả lời bằng tiếng Trung (Space: nghe lại)</div><div class="spk"><button id="pl" aria-label="Nghe lại">🔊</button></div>
+  <p class="hz hide" id="txt" style="text-align:center;font-size:28px;margin:0 0 4px">${esc(x.h)}</p><p class="small hide" id="txv" style="text-align:center">${esc(x.p)} · ${esc(x.v)}</p>
+  <div class="bar" style="justify-content:center">${SR?'<button class="btn pri" id="mic">🎤 Trả lời</button>':''}<button class="btn" id="shw">Hiện câu hỏi</button><button class="btn" id="self">Tự chấm</button></div>
+  <p class="small" id="heard" style="text-align:center;margin-top:10px"></p>
+  <div class="bar hide" id="sg" style="justify-content:center;margin-top:8px"><button class="btn" id="g1">✓ Trả lời được</button><button class="btn" id="g0">✗ Chưa được</button></div>${TAIL}
+  <p class="small hide" id="samp" style="margin-top:10px">Trả lời mẫu: <span class="hz" style="font-size:20px">${esc(x.a)}</span> · ${esc(x.ap)}</p>`;
+  setTimeout(()=>say(x.h),250);gram(null);
+  const show=()=>{$('txt').classList.remove('hide');$('txv').classList.remove('hide')};
+  let done=false;const end=(ok,t)=>{if(done)return;done=true;$('sg').classList.add('hide');show();$('samp').classList.remove('hide');if($('mic'))$('mic').disabled=true;gain(ok?12:0);fbShow(ok,x,onAns,onNext,t)};
+  $('pl').onclick=()=>say(x.h);$('shw').onclick=show;$('self').onclick=()=>{$('samp').classList.remove('hide');$('sg').classList.remove('hide')};
+  $('g1').onclick=()=>end(true,'Tự chấm: trả lời được');$('g0').onclick=()=>end(false,'Tự chấm: chưa được');
+  if(SR)$('mic').onclick=()=>{$('mic').disabled=true;$('mic').textContent='🎤 Đang nghe…';
+    rec(false,e=>{const ts=[...e.results[0]].map(a=>dg(a.transcript)),hit=ts.find(t=>x.k.test(t)&&plain(t).length>=3);
+      $('heard').textContent='Máy nghe được: '+(hit||ts[0]||'');if(hit)end(true,'Trả lời được!');else{$('heard').textContent+=' · Chưa đúng ý câu hỏi. Nói lại, hoặc tự chấm.';$('sg').classList.remove('hide')}},
+      er=>{$('heard').textContent=micMsg(er)},()=>{if(!done&&$('mic')){$('mic').disabled=false;$('mic').textContent='🎤 Trả lời'}})};
+  keyH=e=>{if(!done&&e.key===' '){e.preventDefault();say(x.h)}else if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+function topicMenu(){gram(null);st.innerHTML=`<div class="q">Phần 3 · Nói theo chủ đề</div><p class="lbl">Chọn một chủ đề, đọc gợi ý, bấm bắt đầu rồi nói liên tục khoảng 90 giây.</p>
+  <div class="tower">${TOP.map((t,j)=>`<button class="floor" data-j="${j}"><span class="n">${j+1}</span><span><span class="t hz">${esc(t.h)}</span><br><span class="s">${esc(t.v)}</span></span><span class="small">→</span></button>`).join('')}</div><div class="bar" style="margin-top:12px"><button class="btn" id="bk">← Các phần HSKK</button></div>`;
+  keyH=null;st.querySelectorAll('.floor').forEach(b=>b.onclick=()=>topic(TOP[+b.dataset.j]));$('bk').onclick=hskk}
+let topT=null,topR=null,topRun=false;
+function topic(t){clearInterval(topT);topRun=false;
+  st.innerHTML=`<div class="lbl">Chủ đề</div><div class="q"><span class="hz" style="font-size:clamp(28px,6vw,40px)">${esc(t.h)}</span><span class="lbl" style="display:block;font-weight:400">${esc(t.p)} · ${esc(t.v)}</span></div>
+  <div><b>Gợi ý ý chính</b><ul style="margin:6px 0 0;padding-left:20px">${t.hints.map(h=>`<li><span class="hz" style="font-size:18px">${esc(h[0])}</span> <span class="small">${esc(h[1])}</span></li>`).join('')}</ul></div>
+  <div class="bar" style="margin-top:14px"><button class="btn pri" id="go3">🎤 Bắt đầu nói (90 giây)</button><span class="big" id="tm" style="font-size:32px">1:30</span></div>
+  <p id="live" class="hz" style="font-size:20px;min-height:30px;margin:10px 0"></p><p class="small" id="cnt"></p>
+  <div class="hide" id="after"><div class="gp"><b>Bài mẫu</b><p class="hz" style="font-size:19px">${esc(t.a)}</p><p class="small">${esc(t.ap)}</p></div>
+  <div class="bar" style="margin-top:10px"><button class="btn" id="g1">✓ Nói đủ ý</button><button class="btn" id="g0">✗ Chưa đủ</button><button class="btn" id="pl">🔊 Nghe bài mẫu</button><button class="btn" id="bk">Chủ đề khác</button></div></div>`;
+  keyH=null;let txt='',blocked=false;
+  const stop=()=>{topRun=false;clearInterval(topT);try{topR&&topR.stop()}catch(e){}if(!$('go3'))return;$('go3').textContent='🎤 Nói lại (90 giây)';$('after').classList.remove('hide');
+    const n=plain(txt).length;$('cnt').textContent=SR&&!blocked?`Máy nghe được khoảng ${n} chữ. Mốc tham khảo cho sơ cấp: từ 40 chữ trở lên, đủ các ý gợi ý.`:'Đối chiếu với bài mẫu rồi tự chấm.'};
+  $('go3').onclick=()=>{if(topRun)return stop();topRun=true;txt='';$('live').textContent='';$('cnt').textContent='';$('after').classList.add('hide');$('go3').textContent='⏹ Dừng';let left=90;$('tm').textContent='1:30';
+    topT=setInterval(()=>{left--;if($('tm'))$('tm').textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(left<=0)stop()},1000);
+    if(SR&&!blocked){const start=()=>{topR=rec(true,e=>{let f='',im='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)f+=r[0].transcript;else im+=r[0].transcript}txt+=f;if($('live'))$('live').textContent=txt+im},
+        er=>{if(er==='not-allowed'||er==='service-not-allowed')blocked=true;if(er!=='no-speech'&&$('cnt'))$('cnt').textContent=micMsg(er)},()=>{if(topRun&&!blocked)start()})};start()}
+    else $('cnt').textContent='Không có nhận giọng nói ở đây: cứ nói to theo đồng hồ, xong tự chấm.'};
+  $('g1').onclick=()=>{mark('hskk');gain(40);toast('✓ Đã ghi nhận bài nói, +40 điểm');topicMenu()};$('g0').onclick=()=>{mark('hskk');topicMenu()};
+  $('pl').onclick=()=>say(t.a);$('bk').onclick=()=>{stop();topicMenu()}}
+
 /* ---------- điều hướng ---------- */
-const MODES={tower,skills,paper,cards,learn,write,test,match,exam};
-const NOTES={skills:'Nói: dùng Chrome hoặc Edge và cho phép micro để máy chấm; nếu micro bị chặn thì nghe mẫu rồi tự chấm. Viết: bấm các ô theo thứ tự để ghép câu; phần dịch gõ chữ Hán (cần bộ gõ tiếng Trung) hoặc pinyin.',paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Học theo bài 20 từ. Trả lời sai thì từ đó quay lại bước 1. Bấm 💾 Lưu bài để chốt ngày học và quay về danh sách bài.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
-function go(m,re){mode=m;gram(null);clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
+const MODES={plan,tower,skills,hskk,paper,cards,learn,write,test,match,exam};
+const NOTES={plan:'Việc trong ngày tự đánh dấu ✓ khi bạn làm. Ngày nào có điểm sẽ được tô xanh.',hskk:'Máy chấm phần nói cần micro: mở app bằng link GitHub trên Chrome hoặc Edge. Trong Claude micro bị chặn, hãy dùng Tự chấm.',skills:'Nói: dùng Chrome hoặc Edge và cho phép micro để máy chấm; nếu micro bị chặn thì nghe mẫu rồi tự chấm. Viết: bấm các ô theo thứ tự để ghép câu; phần dịch gõ chữ Hán (cần bộ gõ tiếng Trung) hoặc pinyin.',paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Học theo bài 20 từ. Trả lời sai thì từ đó quay lại bước 1. Bấm 💾 Lưu bài để chốt ngày học và quay về danh sách bài.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+function go(m,re){mode=m;gram(null);topRun=false;clearInterval(topT);try{topR&&topR.stop()}catch(e){}clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
   $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
 $('set').onchange=()=>{store.set('set',$('set').value);go(mode,true)};
 const sb=()=>{$('starOnly').classList.toggle('on',starOnly);$('starOnly').setAttribute('aria-pressed',starOnly)};
 $('starOnly').onclick=()=>{starOnly=!starOnly;store.set('staronly',starOnly);sb();go(mode,true)};sb();
-const h=(location.hash||'').slice(1);cult();go(MODES[h]?h:'tower',true);
+const h=(location.hash||'').slice(1);cult();go(MODES[h]?h:'plan',true);
 }
 </script>
 </body>
