@@ -309,7 +309,7 @@ function typeQ(w,key,head,onAns,onNext){
     $('fb').innerHTML=`<b>${r===2?'Chính xác!':r===1?(key==='p'?'Đúng, nhưng thiếu/sai dấu thanh':'Đúng, nhưng thiếu dấu'):'Chưa đúng'}</b>Đáp án: <span class="hz">${esc(w.h)}</span> · ${esc(w.p)} · ${esc(w.v)}`;
     say(w.h);gain(ok?15:0);onAns(ok);$('go').classList.remove('hide');if(!ok&&$('ti').value.trim())$('ovr').classList.remove('hide');
     $('ovr').onclick=()=>{gain(15);onAns(true);$('ovr').classList.add('hide');$('fb').className='fb ok';$('fb').querySelector('b').textContent='Đã tính là đúng'};
-    setTimeout(()=>$('cont').focus(),0);$('cont').onclick=onNext};
+    setTimeout(()=>{const c=$('cont');if(c)c.focus()},0);$('cont').onclick=onNext};
   $('tf').onsubmit=e=>{e.preventDefault();if(done)return onNext();const v=$('ti').value;if(!v.trim())return;fin(key==='p'?checkPy(v,w):checkVi(v,w))};
   $('idk').onclick=()=>fin(0);
   keyH=e=>{if(done&&e.key==='Enter'&&e.target.tagName!=='INPUT'){e.preventDefault();onNext()}}}
@@ -369,13 +369,33 @@ function startMatch(w){const pick=shuf(w).slice(0,6),tiles=shuf(pick.flatMap(x=>
     else{M.pen+=1;[a,b].forEach(x=>{x.classList.add('no');setTimeout(()=>x.classList.remove('no'),400)})}})}
 
 /* ---------- 4 KỸ NĂNG: nghe nói đọc viết ---------- */
-const SRAW=[["我|是|越南人","wǒ shì Yuènán rén","Tôi là người Việt Nam."],["你|叫|什么|名字？","nǐ jiào shénme míngzi?","Bạn tên là gì?"],["我|很|高兴|认识|你","wǒ hěn gāoxìng rènshi nǐ","Tôi rất vui được quen bạn."],["他|是|我|的|朋友","tā shì wǒ de péngyou","Anh ấy là bạn của tôi."],["你|是|哪|国|人？","nǐ shì nǎ guó rén?","Bạn là người nước nào?"],["她|是|中国人|吗？","tā shì Zhōngguó rén ma?","Cô ấy là người Trung Quốc à?"],["我|喜欢|听|音乐","wǒ xǐhuan tīng yīnyuè","Tôi thích nghe nhạc."],["我|有|两本|书","wǒ yǒu liǎng běn shū","Tôi có hai quyển sách."],["图书馆|在|哪儿？","túshūguǎn zài nǎr?","Thư viện ở đâu?"],["教室|在|图书馆|旁边","jiàoshì zài túshūguǎn pángbiān","Phòng học ở bên cạnh thư viện."],["现在|几|点？","xiànzài jǐ diǎn?","Bây giờ mấy giờ?"],["我|早上|七点|起床","wǒ zǎoshang qī diǎn qǐchuáng","Tôi dậy lúc 7 giờ sáng."],["你|明天|有空儿|吗？","nǐ míngtiān yǒu kòngr ma?","Ngày mai bạn rảnh không?"],["我们|一起|去|看|电影|吧","wǒmen yìqǐ qù kàn diànyǐng ba","Chúng ta cùng đi xem phim nhé."],["我|坐|地铁|去|公司","wǒ zuò dìtiě qù gōngsī","Tôi đi tàu điện ngầm đến công ty."],["他|骑|自行车|去|学校","tā qí zìxíngchē qù xuéxiào","Anh ấy đi xe đạp đến trường."],["这个|多少|钱？","zhège duōshao qián?","Cái này bao nhiêu tiền?"],["太|贵|了","tài guì le","Đắt quá."],["我|要|一瓶|水","wǒ yào yì píng shuǐ","Tôi muốn một chai nước."],["一共|三十|块","yígòng sānshí kuài","Tổng cộng 30 tệ."],["我|想|喝|咖啡","wǒ xiǎng hē kāfēi","Tôi muốn uống cà phê."],["汉语|不|太|难","Hànyǔ bú tài nán","Tiếng Hán không khó lắm."],["我|在|公司|工作","wǒ zài gōngsī gōngzuò","Tôi làm việc ở công ty."],["你|家|在|哪里？","nǐ jiā zài nǎlǐ?","Nhà bạn ở đâu?"],["我|今天|很|忙","wǒ jīntiān hěn máng","Hôm nay tôi rất bận."],["她|会|说|汉语","tā huì shuō Hànyǔ","Cô ấy biết nói tiếng Hán."],["我们|都|是|学生","wǒmen dōu shì xuésheng","Chúng tôi đều là học sinh."],["你|喝|茶|还是|喝|咖啡？","nǐ hē chá háishi hē kāfēi?","Bạn uống trà hay uống cà phê?"],["我|晚上|十一点|睡觉","wǒ wǎnshang shíyī diǎn shuìjiào","Tôi ngủ lúc 11 giờ tối."],["我|的|手机|坏|了","wǒ de shǒujī huài le","Điện thoại của tôi hỏng rồi."],["请问，|洗手间|在|哪儿？","qǐngwèn, xǐshǒujiān zài nǎr?","Xin hỏi, nhà vệ sinh ở đâu?"],["对不起，|我|不|知道","duìbuqǐ, wǒ bù zhīdào","Xin lỗi, tôi không biết."],["周末|你|常常|做|什么？","zhōumò nǐ chángcháng zuò shénme?","Cuối tuần bạn thường làm gì?"],["我|的|爱好|是|看|电影","wǒ de àihào shì kàn diànyǐng","Sở thích của tôi là xem phim."],["医院|在|商店|对面","yīyuàn zài shāngdiàn duìmiàn","Bệnh viện ở đối diện cửa hàng."],["昨天|我|没有|去|上班","zuótiān wǒ méiyǒu qù shàngbān","Hôm qua tôi không đi làm."],["他|是|我|的|同事","tā shì wǒ de tóngshì","Anh ấy là đồng nghiệp của tôi."],["我|下午|五点|下班","wǒ xiàwǔ wǔ diǎn xiàbān","Tôi tan làm lúc 5 giờ chiều."],["这些|水果|很|便宜","zhèxiē shuǐguǒ hěn piányi","Những trái cây này rất rẻ."],["你|的|手机|号码|是|多少？","nǐ de shǒujī hàomǎ shì duōshao?","Số điện thoại của bạn là bao nhiêu?"]];
+const SRAW=[["我|是|越南人","wǒ shì Yuènán rén","Tôi là người Việt Nam."],["你|叫|什么|名字？","nǐ jiào shénme míngzi?","Bạn tên là gì?"],["我|很|高兴|认识|你","wǒ hěn gāoxìng rènshi nǐ","Tôi rất vui được quen bạn."],["他|是|我|的|朋友","tā shì wǒ de péngyou","Anh ấy là bạn của tôi."],["你|是|哪|国|人？","nǐ shì nǎ guó rén?","Bạn là người nước nào?"],["她|是|中国人|吗？","tā shì Zhōngguó rén ma?","Cô ấy là người Trung Quốc à?"],["我|喜欢|听|音乐","wǒ xǐhuan tīng yīnyuè","Tôi thích nghe nhạc."],["我|有|两本|书","wǒ yǒu liǎng běn shū","Tôi có hai quyển sách."],["图书馆|在|哪儿？","túshūguǎn zài nǎr?","Thư viện ở đâu?"],["教室|在|图书馆|旁边","jiàoshì zài túshūguǎn pángbiān","Phòng học ở bên cạnh thư viện."],["现在|几|点？","xiànzài jǐ diǎn?","Bây giờ mấy giờ?"],["我|早上|七点|起床","wǒ zǎoshang qī diǎn qǐchuáng","Tôi dậy lúc 7 giờ sáng."],["你|明天|有空儿|吗？","nǐ míngtiān yǒu kòngr ma?","Ngày mai bạn rảnh không?"],["我们|一起|去|看|电影|吧","wǒmen yìqǐ qù kàn diànyǐng ba","Chúng ta cùng đi xem phim nhé."],["我|坐|地铁|去|公司","wǒ zuò dìtiě qù gōngsī","Tôi đi tàu điện ngầm đến công ty."],["他|骑|自行车|去|学校","tā qí zìxíngchē qù xuéxiào","Anh ấy đi xe đạp đến trường."],["这个|多少|钱？","zhège duōshao qián?","Cái này bao nhiêu tiền?"],["太|贵|了","tài guì le","Đắt quá."],["我|要|一瓶|水","wǒ yào yì píng shuǐ","Tôi muốn một chai nước."],["一共|三十|块","yígòng sānshí kuài","Tổng cộng 30 tệ."],["我|想|喝|咖啡","wǒ xiǎng hē kāfēi","Tôi muốn uống cà phê."],["汉语|不|太|难","Hànyǔ bú tài nán","Tiếng Hán không khó lắm."],["我|在|公司|工作","wǒ zài gōngsī gōngzuò","Tôi làm việc ở công ty."],["你|家|在|哪里？","nǐ jiā zài nǎlǐ?","Nhà bạn ở đâu?"],["我|今天|很|忙","wǒ jīntiān hěn máng","Hôm nay tôi rất bận."],["她|会|说|汉语","tā huì shuō Hànyǔ","Cô ấy biết nói tiếng Hán."],["我们|都|是|学生","wǒmen dōu shì xuésheng","Chúng tôi đều là học sinh."],["你|喝|茶|还是|喝|咖啡？","nǐ hē chá háishi hē kāfēi?","Bạn uống trà hay uống cà phê?"],["我|晚上|十一点|睡觉","wǒ wǎnshang shíyī diǎn shuìjiào","Tôi ngủ lúc 11 giờ tối."],["我|的|手机|坏|了","wǒ de shǒujī huài le","Điện thoại của tôi hỏng rồi."],["请问，|洗手间|在|哪儿？","qǐngwèn, xǐshǒujiān zài nǎr?","Xin hỏi, nhà vệ sinh ở đâu?"],["对不起，|我|不|知道","duìbuqǐ, wǒ bù zhīdào","Xin lỗi, tôi không biết."],["周末|你|常常|做|什么？","zhōumò nǐ chángcháng zuò shénme?","Cuối tuần bạn thường làm gì?"],["我|的|爱好|是|看|电影","wǒ de àihào shì kàn diànyǐng","Sở thích của tôi là xem phim."],["医院|在|商店|对面","yīyuàn zài shāngdiàn duìmiàn","Bệnh viện ở đối diện cửa hàng."],["昨天|我|没有|去|上班","zuótiān wǒ méiyǒu qù shàngbān","Hôm qua tôi không đi làm."],["他|是|我|的|同事","tā shì wǒ de tóngshì","Anh ấy là đồng nghiệp của tôi."],["我|下午|五点|下班","wǒ xiàwǔ wǔ diǎn xiàbān","Tôi tan làm lúc 5 giờ chiều."],["这些|水果|很|便宜","zhèxiē shuǐguǒ hěn piányi","Những trái cây này rất rẻ."],["你|的|手机|号码|是|多少？","nǐ de shǒujī hàomǎ shì duōshao?","Số điện thoại của bạn là bao nhiêu?"],
+["我|是|越南人，|现在|在|一家|公司|工作","wǒ shì Yuènán rén, xiànzài zài yì jiā gōngsī gōngzuò","Tôi là người Việt Nam, bây giờ làm việc ở một công ty."],
+["我|每天|早上|七点|起床，|八点|去|上班","wǒ měitiān zǎoshang qī diǎn qǐchuáng, bā diǎn qù shàngbān","Mỗi ngày tôi dậy lúc 7 giờ sáng, 8 giờ đi làm."],
+["我|的|同事|会|说|汉语，|也|会|说|英语","wǒ de tóngshì huì shuō Hànyǔ, yě huì shuō Yīngyǔ","Đồng nghiệp của tôi biết nói tiếng Hán, cũng biết nói tiếng Anh."],
+["周末|我|常常|和|朋友|一起|去|看|电影","zhōumò wǒ chángcháng hé péngyou yìqǐ qù kàn diànyǐng","Cuối tuần tôi thường cùng bạn bè đi xem phim."],
+["图书馆|在|教学楼|的|后边，|不|太|远","túshūguǎn zài jiàoxuélóu de hòubian, bú tài yuǎn","Thư viện ở phía sau tòa giảng đường, không xa lắm."],
+["我|想|买|一些|水果，|你|知道|哪儿|有|水果店|吗？","wǒ xiǎng mǎi yìxiē shuǐguǒ, nǐ zhīdào nǎr yǒu shuǐguǒdiàn ma?","Tôi muốn mua ít trái cây, bạn có biết ở đâu có tiệm trái cây không?"],
+["太|贵|了，|可以|便宜|一点儿|吗？","tài guì le, kěyǐ piányi yìdiǎnr ma?","Đắt quá, có thể rẻ hơn một chút không?"],
+["昨天|我|很|累，|晚上|十点|就|睡觉|了","zuótiān wǒ hěn lèi, wǎnshang shí diǎn jiù shuìjiào le","Hôm qua tôi rất mệt, 10 giờ tối đã đi ngủ rồi."],
+["我|坐|公共汽车|去|公司，|要|四十|分钟","wǒ zuò gōnggòng qìchē qù gōngsī, yào sìshí fēnzhōng","Tôi đi xe buýt đến công ty, mất 40 phút."],
+["你|明天|下午|有空儿|吗？|我们|去|喝|咖啡|吧","nǐ míngtiān xiàwǔ yǒu kòngr ma? wǒmen qù hē kāfēi ba","Chiều mai bạn rảnh không? Chúng ta đi uống cà phê nhé."],
+["我|的|手机|坏|了，|我|不|知道|他|的|号码","wǒ de shǒujī huài le, wǒ bù zhīdào tā de hàomǎ","Điện thoại của tôi hỏng rồi, tôi không biết số của anh ấy."],
+["我|的|爱好|是|听|音乐|和|看|电影","wǒ de àihào shì tīng yīnyuè hé kàn diànyǐng","Sở thích của tôi là nghe nhạc và xem phim."],
+["我们|班|有|二十|个|学生，|都|是|留学生","wǒmen bān yǒu èrshí ge xuésheng, dōu shì liúxuéshēng","Lớp chúng tôi có 20 học sinh, đều là du học sinh."],
+["我|不|喝|咖啡，|我|喜欢|喝|茶|和|果汁","wǒ bù hē kāfēi, wǒ xǐhuan hē chá hé guǒzhī","Tôi không uống cà phê, tôi thích uống trà và nước ép."],
+["医院|在|学校|对面，|商店|在|医院|旁边","yīyuàn zài xuéxiào duìmiàn, shāngdiàn zài yīyuàn pángbiān","Bệnh viện ở đối diện trường, cửa hàng ở bên cạnh bệnh viện."],
+["今天|是|星期六，|我|不|上班","jīntiān shì xīngqīliù, wǒ bú shàngbān","Hôm nay là thứ Bảy, tôi không đi làm."],
+["一共|三十五|块，|给|你|五十，|找|你|十五","yígòng sānshíwǔ kuài, gěi nǐ wǔshí, zhǎo nǐ shíwǔ","Tổng cộng 35 tệ, đưa bạn 50, thối bạn 15."],
+["现在|差|一刻|九点，|我们|走|吧","xiànzài chà yí kè jiǔ diǎn, wǒmen zǒu ba","Bây giờ là 9 giờ kém 15, chúng ta đi thôi."],
+["他|是|中国人，|他|家|在|北京","tā shì Zhōngguó rén, tā jiā zài Běijīng","Anh ấy là người Trung Quốc, nhà anh ấy ở Bắc Kinh."],
+["我|在|越南|学习|汉语，|汉语|不|太|难","wǒ zài Yuènán xuéxí Hànyǔ, Hànyǔ bú tài nán","Tôi học tiếng Hán ở Việt Nam, tiếng Hán không khó lắm."]];
 const SENT=SRAW.map((r,i)=>({id:i,t:r[0].split('|'),h:r[0].replace(/\|/g,''),p:r[1],v:r[2]}));
 const plain=s=>s.replace(/[，。？！、,.?!\s]/g,''),dg=s=>s.replace(/\d/g,c=>'零一二三四五六七八九'[c]);
 function sim(a,b){if(!a||!b)return 0;const m=a.length,n=b.length,d=Array(n+1).fill(0);for(let i=1;i<=m;i++){let pv=0;for(let j=1;j<=n;j++){const t=d[j];d[j]=a[i-1]===b[j-1]?pv+1:Math.max(d[j],d[j-1]);pv=t}}return d[n]/Math.max(m,n)}
 const TAIL=`<div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button></div>`;
-function fbShow(ok,x,onAns,onNext,title){$('fb').className='fb '+(ok?'ok':'no');$('fb').innerHTML=`<b>${title||(ok?'Chính xác!':'Chưa đúng')}</b><span class="hz">${esc(x.h)}</span> · ${esc(x.p)} · ${esc(x.v)}`;onAns(ok);$('go').classList.remove('hide');setTimeout(()=>$('cont').focus(),0);$('cont').onclick=onNext}
-const SKILLS={listen:['🎧','Nghe','Nghe câu chọn nghĩa · nghe từ gõ pinyin'],speak:['🗣️','Nói','Đọc to từ và câu, máy nghe và chấm (hoặc tự chấm)'],read:['📖','Đọc','Đọc câu chữ Hán, chọn nghĩa đúng'],writeS:['✍️','Viết','Sắp xếp từ thành câu · viết câu ra giấy']};
+function fbShow(ok,x,onAns,onNext,title){$('fb').className='fb '+(ok?'ok':'no');$('fb').innerHTML=`<b>${title||(ok?'Chính xác!':'Chưa đúng')}</b><span class="hz">${esc(x.h)}</span> · ${esc(x.p)} · ${esc(x.v)}`;onAns(ok);$('go').classList.remove('hide');setTimeout(()=>{const c=$('cont');if(c)c.focus()},0);$('cont').onclick=onNext}
+const SKILLS={listen:['🎧','Nghe','Nghe câu chọn nghĩa · nghe từ gõ pinyin'],speak:['🗣️','Nói','Đọc to từ và câu, máy nghe và chấm (hoặc tự chấm)'],read:['📖','Đọc','Đọc câu chữ Hán, chọn nghĩa đúng'],writeS:['✍️','Viết','Sắp xếp từ thành câu · dịch Việt → Trung (gõ chữ Hán hoặc pinyin)']};
 let SK=store.get('skills',{});
 function skills(){
   st.innerHTML=`<div class="q">Nghe · Nói · Đọc · Viết</div><p class="lbl">Mỗi bài 10 câu, dùng ${SENT.length} câu mẫu HSK 1 và từ của nhóm đang chọn. Đúng từ 80% trở lên là qua (+40 điểm).</p>
@@ -388,7 +408,7 @@ function skillRun(k){const w=shuf(words()),ss=shuf(SENT),R={i:0,ok:0,wrong:[]};
     if(k==='listen'){if(i%2===0||!wd)sentMcq(s,head,on(s),nx,true);else listenType(wd,head,on(wd),nx)}
     else if(k==='speak'){const it=(i%2===0||!wd)?s:wd;speakQ(it,head,on(it),nx)}
     else if(k==='read')sentMcq(s,head,on(s),nx,false);
-    else{if(i%3===2)paperSent(s,head,on(s),nx);else orderQ(s,head,on(s),nx)}};
+    else{const it=(i%4===1&&wd)?wd:s;if(i%2===0)orderQ(s,head,on(s),nx);else transQ(it,head,on(it),nx)}};
   const fin=()=>{const pct=R.ok*10;if(SK[k]==null||pct>SK[k]){SK[k]=pct;store.set('skills',SK)}gain(pct>=80?40:0);
     st.innerHTML=`<div class="lbl">${SKILLS[k][1]}: kết quả</div><div class="big" style="color:${pct>=80?'var(--ok)':'var(--red)'}">${pct}%</div><p>Đúng ${R.ok}/10.</p>
     <div class="bar"><button class="btn pri" id="ag">Làm lại</button><button class="btn" id="bk">Chọn kỹ năng khác</button></div>
@@ -446,19 +466,27 @@ function orderQ(s,head,onAns,onNext){let pool=shuf(s.t.map((t,i)=>({t,i})));if(s
     $('clr').onclick=()=>{pool.push(...pick.splice(0));draw()};$('chk').onclick=check;if(!pool.length)$('chk').focus()};
   draw();
   keyH=e=>{if(e.key!=='Enter')return;e.preventDefault();if(done)onNext();else check()}}
-/* Viết: viết câu ra giấy rồi tự chấm */
-function paperSent(s,head,onAns,onNext){
-  st.innerHTML=`${head}<div class="lbl">Viết câu này bằng chữ Hán ra giấy, xong bấm xem đáp án</div><div class="q">${esc(s.v)}</div>
-  <div class="bar"><button class="btn pri" id="rv">Xem đáp án</button></div>
-  <div class="bar hide" id="sg" style="margin-top:12px"><span class="hz" style="font-size:clamp(26px,5vw,40px);flex-basis:100%">${esc(s.h)}</span><span class="small" style="flex-basis:100%">${esc(s.p)}</span><button class="btn" id="g1">✓ Viết đúng</button><button class="btn" id="g0">✗ Sai chữ</button></div>${TAIL}`;
-  let done=false;const end=ok=>{if(done)return;done=true;$('sg').classList.add('hide');gain(ok?15:0);fbShow(ok,s,onAns,onNext)};
-  $('rv').onclick=()=>{$('rv').classList.add('hide');$('sg').classList.remove('hide');say(s.h)};
-  $('g1').onclick=()=>end(true);$('g0').onclick=()=>end(false);
-  keyH=e=>{if(done&&e.key==='Enter'){e.preventDefault();onNext()}}}
+/* Viết: dịch Việt → Trung, gõ chữ Hán (bộ gõ tiếng Trung) hoặc pinyin */
+const nP=t=>nPy(t.replace(/[，。？！、,.?!]/g,''));
+function transQ(x,head,onAns,onNext){
+  st.innerHTML=`${head}<div class="lbl">Viết sang tiếng Trung: gõ chữ Hán hoặc pinyin (có hoặc không dấu thanh)</div><div class="q">${esc(x.v)}</div>
+  <form class="typ" id="tf"><input id="ti" autocomplete="off" autocapitalize="off" spellcheck="false" lang="zh" aria-label="Câu trả lời"><button class="btn pri">Kiểm tra</button><button type="button" class="btn" id="idk">Không biết</button></form>
+  <div class="fb" id="fb"></div><div class="bar hide" id="go" style="margin-top:12px"><button class="btn pri" id="cont">Tiếp tục (Enter)</button><button class="btn hide" id="ovr">Tôi đã trả lời đúng</button></div>`;
+  $('ti').focus();let done=false;
+  const grade=v=>{if(/[一-鿿]/.test(v)){const a=plain(v),b=plain(x.h);return a===b?2:sim(a,b)>=.85?-1:0}
+    const a=nP(v),b=nP(x.p);return a===b?2:strip(a)===strip(b)?1:0};
+  const fin=r=>{if(done)return;done=true;const ok=r>0;$('ti').disabled=true;say(x.h);gain(ok?20:0);
+    fbShow(ok,x,onAns,onNext,r===2?'Chính xác!':r===1?'Đúng, nhưng thiếu/sai dấu thanh':r===-1?'Gần đúng, còn sai vài chữ':'Chưa đúng');
+    if(!ok&&$('ti').value.trim())$('ovr').classList.remove('hide');
+    $('ovr').onclick=()=>{gain(20);onAns(true);$('ovr').classList.add('hide');$('fb').className='fb ok';$('fb').querySelector('b').textContent='Đã tính là đúng'}};
+  $('tf').onsubmit=e=>{e.preventDefault();if(done)return onNext();const v=$('ti').value;if(!v.trim())return;fin(grade(v))};
+  $('idk').onclick=()=>fin(0);
+  keyH=e=>{if(done&&e.key==='Enter'&&e.target.tagName!=='INPUT'){e.preventDefault();onNext()}}}
+
 
 /* ---------- điều hướng ---------- */
 const MODES={tower,skills,paper,cards,learn,write,test,match,exam};
-const NOTES={skills:'Nói: dùng Chrome hoặc Edge và cho phép micro để máy chấm; nếu micro bị chặn thì nghe mẫu rồi tự chấm. Viết: bấm các ô theo thứ tự để ghép câu.',paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Học theo bài 20 từ. Trả lời sai thì từ đó quay lại bước 1. Bấm 💾 Lưu bài để chốt ngày học và quay về danh sách bài.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
+const NOTES={skills:'Nói: dùng Chrome hoặc Edge và cho phép micro để máy chấm; nếu micro bị chặn thì nghe mẫu rồi tự chấm. Viết: bấm các ô theo thứ tự để ghép câu; phần dịch gõ chữ Hán (cần bộ gõ tiếng Trung) hoặc pinyin.',paper:'Danh sách lấy ngẫu nhiên từ nhóm đang chọn. Bật "★ Chỉ từ gắn sao" để luyện viết riêng từ khó.',tower:'Chơi từ màn 1. Mỗi câu đúng cộng điểm; qua màn lần đầu +100 điểm. Đủ điểm thì lên level.',exam:'Phần Nghe: bấm 🔊 hoặc phím Space để nghe lại. Giọng đọc là giọng tiếng Trung có sẵn trên máy.',cards:'Bấm thẻ hoặc phím Space để lật. ☆ để gắn sao từ khó.',learn:'Học theo bài 20 từ. Trả lời sai thì từ đó quay lại bước 1. Bấm 💾 Lưu bài để chốt ngày học và quay về danh sách bài.',write:'Gõ pinyin có hoặc không dấu thanh. Gõ nghĩa: chỉ cần khớp một trong các nghĩa. Máy chấm sai mà bạn thấy đúng thì bấm "Tôi đã trả lời đúng".',test:'Phím 1–4 để chọn đáp án, Enter để sang câu tiếp.',match:'Kỷ lục lưu riêng cho từng nhóm.'};
 function go(m,re){mode=m;clearInterval(timer);clearInterval(examT);document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));
   $('note').textContent=NOTES[m]+' Sao và kỷ lục lưu trên trình duyệt của máy này.';try{location.hash=m}catch(e){}MODES[m](re)}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.m,true));
